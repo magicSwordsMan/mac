@@ -6,10 +6,6 @@ package mac
 import "C"
 import "unsafe"
 
-func free(p unsafe.Pointer) {
-	C.free(p)
-}
-
 func boolToBOOL(b bool) C.BOOL {
 	if b {
 		return C.YES
@@ -19,4 +15,8 @@ func boolToBOOL(b bool) C.BOOL {
 
 func cString(str string) *C.char {
 	return C.CString(str)
+}
+
+func free(p unsafe.Pointer) {
+	C.free(p)
 }

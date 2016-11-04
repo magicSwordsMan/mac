@@ -7,6 +7,8 @@ import "C"
 import (
 	"unsafe"
 
+	"reflect"
+
 	"github.com/murlokswarm/app"
 	"github.com/murlokswarm/uid"
 )
@@ -24,13 +26,19 @@ func NewDriver() *Driver {
 	}
 }
 
-// Run runs launches the Cocoa app.
+// Run launches the Cocoa app.
 func (d *Driver) Run() {
 	C.Driver_Run()
 }
 
 func (d *Driver) NewContext(ctx interface{}) app.Contexter {
-	return nil
+	switch c := ctx.(type) {
+	case app.Window:
+		return NewWindow(c)
+
+	default:
+		return app.NewZeroContext(reflect.TypeOf(c).String())
+	}
 }
 
 func (d *Driver) Render(target uid.ID, HTML string) (err error) {

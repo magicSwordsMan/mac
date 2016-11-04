@@ -7,7 +7,7 @@ package mac
 
 /*
 #cgo CFLAGS: -x objective-c -fobjc-arc
-#cgo LDFLAGS: -framework Cocoa
+#cgo LDFLAGS: -framework Cocoa -framework WebKit -framework CoreImage
 */
 import "C"
 import (
