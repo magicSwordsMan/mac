@@ -1,6 +1,6 @@
 ---
 language: objective-c
-osx_image: xcode8.0
+osx_image: xcode8.1
 
 before_install:
   - export GOROOT=/Users/travis/go
@@ -13,8 +13,8 @@ before_install:
   - curl -o /tmp/go.tar.gz https://storage.googleapis.com/golang/go1.7.1.darwin-amd64.tar.gz
   - (cd `dirname $GOROOT` && tar -xzf /tmp/go.tar.gz)
   - cd $NEW_DIR
-  - mv $OLD_DIR iu
-  - cd iu
+  - mv $OLD_DIR mac
+  - cd mac
 
   - go version
 
