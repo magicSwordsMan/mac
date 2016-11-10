@@ -16,8 +16,9 @@ import (
 )
 
 type Window struct {
-	id  uid.ID
-	ptr unsafe.Pointer
+	id   uid.ID
+	ptr  unsafe.Pointer
+	root markup.Componer
 }
 
 // NewWindow creates a window.
@@ -88,8 +89,20 @@ func (w *Window) Mount(c markup.Componer) {
 		return
 	}
 
+	w.root = c
+
 	html = strconv.Quote(html)
 	call := fmt.Sprintf(`Mount("%v", %v)`, w.ID(), html)
+
+	ccall := C.CString(call)
+	defer free(unsafe.Pointer(ccall))
+
+	C.Window_CallJS(w.ptr, ccall)
+}
+
+func (w *Window) Render(elem *markup.Element) {
+	html := strconv.Quote(elem.HTML())
+	call := fmt.Sprintf(`Render("%v", %v)`, elem.ID, html)
 
 	ccall := C.CString(call)
 	defer free(unsafe.Pointer(ccall))
@@ -107,4 +120,9 @@ func (w *Window) Resize(width float64, height float64) {
 
 func (w *Window) SetIcon(path string) {
 	return
+}
+
+func (w *Window) Close() {
+	markup.Dismount(w.root)
+	app.UnregisterContext(w)
 }
