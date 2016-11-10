@@ -18,10 +18,16 @@ typedef struct Window__ {
   BOOL CloseHidden;
   BOOL MinimizeHidden;
   BOOL TitlebarHidden;
+  char *HTML;
+  char *ResourcePath;
 } Window__;
 
-@interface WindowController : NSWindowController <NSWindowDelegate>
+@interface WindowController
+    : NSWindowController <NSWindowDelegate, WKNavigationDelegate,
+                          WKScriptMessageHandler>
 @property NSString *ID;
+@property(weak) WKWebView *webview;
+@property dispatch_semaphore_t sema;
 
 - (instancetype)initWithID:(NSString *)ID;
 @end
@@ -30,7 +36,11 @@ typedef struct Window__ {
 @end
 
 void *Window_New(Window__ w);
-void Window_setWebview(NSWindow *win, WKWebView *webview);
-void Window_setTitleBar(NSWindow *win, TitleBar *titleBar);
+WKWebView *Window_NewWebview(WindowController *controller, NSString *HTML,
+                             NSString *resourcePath);
+void Window_SetWebview(NSWindow *win, WKWebView *webview);
+void Window_SetTitleBar(NSWindow *win, TitleBar *titleBar);
+void Window_Mount(void *ptr, const char *markup);
+void Window_CallJS(void *ptr, const char *js);
 
 #endif /* window_h */

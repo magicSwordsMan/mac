@@ -12,5 +12,6 @@
 void *Driver_Init();
 void Driver_Run();
 void Driver_Terminate();
+const char *Driver_Resources();
 
 #endif /* driver_h */

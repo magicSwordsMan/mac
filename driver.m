@@ -27,7 +27,7 @@
 
 - (BOOL)application:(NSApplication *)theApplication
            openFile:(NSString *)filename {
-  onFileOpen((char *)[filename UTF8String]);
+  onFileOpen((char *)filename.UTF8String);
   return YES;
 }
 
@@ -55,3 +55,8 @@ void *Driver_Init() {
 void Driver_Run() { [NSApp run]; }
 
 void Driver_Terminate() { [NSApp terminate:NSApp]; }
+
+const char *Driver_Resources() {
+  NSBundle *mainBundle = [NSBundle mainBundle];
+  return mainBundle.resourcePath.UTF8String;
+}

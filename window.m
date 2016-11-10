@@ -1,4 +1,5 @@
 #include "window.h"
+#include "_cgo_export.h"
 #include "color.h"
 
 void *Window_New(Window__ w) {
@@ -55,46 +56,78 @@ void *Window_New(Window__ w) {
   }
 
   // Window controller.
-  NSString *id = [NSString stringWithUTF8String:w.BackgroundColor];
-  WindowController *winController = [[WindowController alloc] initWithID:id];
-  winController.window = win;
-  win.windowController = winController;
+  NSString *id = [NSString stringWithUTF8String:w.ID];
+  WindowController *controller = [[WindowController alloc] initWithID:id];
+  controller.window = win;
+  win.windowController = controller;
 
   // WebView.
-  WKWebView *webView = [[WKWebView alloc] initWithFrame:NSMakeRect(0, 0, 0, 0)];
-  Window_setWebview(win, webView);
+  WKWebView *webview =
+      Window_NewWebview(controller, [NSString stringWithUTF8String:w.HTML],
+                        [NSString stringWithUTF8String:w.ResourcePath]);
+  Window_SetWebview(win, webview);
+  controller.webview = webview;
 
   // Titlebar.
-  TitleBar *titleBar = [[TitleBar alloc] init];
-  Window_setTitleBar(win, titleBar);
+  if (w.TitlebarHidden) {
+    TitleBar *titleBar = [[TitleBar alloc] init];
+    Window_SetTitleBar(win, titleBar);
+  }
 
   [win.windowController showWindow:nil];
   return (__bridge_retained void *)win;
 }
 
-void Window_setWebview(NSWindow *win, WKWebView *webView) {
-  webView.translatesAutoresizingMaskIntoConstraints = NO;
-  [win.contentView addSubview:webView];
+WKWebView *Window_NewWebview(WindowController *controller, NSString *HTML,
+                             NSString *resourcePath) {
+  WKUserContentController *userContentController =
+      [[WKUserContentController alloc] init];
+  [userContentController addScriptMessageHandler:controller name:@"Call"];
 
-  [win.contentView
-      addConstraints:
-          [NSLayoutConstraint
-              constraintsWithVisualFormat:@"|[webView]|"
-                                  options:0
-                                  metrics:nil
-                                    views:NSDictionaryOfVariableBindings(
-                                              webView)]];
-  [win.contentView
-      addConstraints:
-          [NSLayoutConstraint
-              constraintsWithVisualFormat:@"V:|[webView]|"
-                                  options:0
-                                  metrics:nil
-                                    views:NSDictionaryOfVariableBindings(
-                                              webView)]];
+  WKWebViewConfiguration *conf = [[WKWebViewConfiguration alloc] init];
+  conf.userContentController = userContentController;
+
+  WKWebView *webView = [[WKWebView alloc] initWithFrame:NSMakeRect(0, 0, 0, 0)
+                                          configuration:conf];
+  [webView setValue:@(NO) forKey:@"drawsBackground"];
+  webView.navigationDelegate = controller;
+
+  // Page loading.
+  NSURL *baseURL = [NSURL fileURLWithPath:resourcePath];
+  [webView loadHTMLString:HTML baseURL:baseURL];
+
+  while (dispatch_semaphore_wait(controller.sema, DISPATCH_TIME_NOW)) {
+    [[NSRunLoop currentRunLoop]
+           runMode:NSDefaultRunLoopMode
+        beforeDate:[NSDate dateWithTimeIntervalSinceNow:10]];
+  }
+
+  return webView;
 }
 
-void Window_setTitleBar(NSWindow *win, TitleBar *titleBar) {
+void Window_SetWebview(NSWindow *win, WKWebView *webview) {
+  webview.translatesAutoresizingMaskIntoConstraints = NO;
+  [win.contentView addSubview:webview];
+
+  [win.contentView
+      addConstraints:
+          [NSLayoutConstraint
+              constraintsWithVisualFormat:@"|[webview]|"
+                                  options:0
+                                  metrics:nil
+                                    views:NSDictionaryOfVariableBindings(
+                                              webview)]];
+  [win.contentView
+      addConstraints:
+          [NSLayoutConstraint
+              constraintsWithVisualFormat:@"V:|[webview]|"
+                                  options:0
+                                  metrics:nil
+                                    views:NSDictionaryOfVariableBindings(
+                                              webview)]];
+}
+
+void Window_SetTitleBar(NSWindow *win, TitleBar *titleBar) {
   titleBar.translatesAutoresizingMaskIntoConstraints = false;
 
   [win.contentView addSubview:titleBar];
@@ -116,10 +149,28 @@ void Window_setTitleBar(NSWindow *win, TitleBar *titleBar) {
                                               titleBar)]];
 }
 
+void Window_CallJS(void *ptr, const char *js) {
+  NSWindow *win = (__bridge NSWindow *)ptr;
+  WindowController *controller = (WindowController *)win.windowController;
+
+  NSString *javaScript = [NSString stringWithUTF8String:js];
+  [controller.webview evaluateJavaScript:javaScript completionHandler:nil];
+}
+
 @implementation WindowController
 - (instancetype)initWithID:(NSString *)ID {
   self.ID = ID;
+  self.sema = dispatch_semaphore_create(0);
   return self;
+}
+
+- (void)webView:(WKWebView *)webView
+    didFinishNavigation:(WKNavigation *)navigation {
+  dispatch_semaphore_signal(self.sema);
+}
+
+- (void)userContentController:(WKUserContentController *)userContentController
+      didReceiveScriptMessage:(WKScriptMessage *)message {
 }
 @end
 
