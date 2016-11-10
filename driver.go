@@ -13,7 +13,6 @@ import (
 
 	"github.com/murlokswarm/app"
 	"github.com/murlokswarm/log"
-	"github.com/murlokswarm/uid"
 )
 
 // Driver is the implementation of the MacOS driver.
@@ -50,10 +49,6 @@ func (d *Driver) NewContext(ctx interface{}) app.Contexter {
 	default:
 		return app.NewZeroContext(reflect.TypeOf(c).String())
 	}
-}
-
-func (d *Driver) Render(target uid.ID, HTML string) (err error) {
-	return
 }
 
 func (d *Driver) AppMenu() app.Contexter {

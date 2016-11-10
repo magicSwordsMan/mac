@@ -1,6 +1,8 @@
 package main
 
 import (
+	"time"
+
 	"github.com/murlokswarm/app"
 	_ "github.com/murlokswarm/mac"
 	"github.com/murlokswarm/markup"
@@ -34,7 +36,28 @@ func main() {
 			TitlebarHidden: true,
 		})
 
-		win.Mount(&Hello{})
+		hello := &Hello{}
+		win.Mount(hello)
+
+		go func() {
+			name := []string{
+				"m",
+				"ma",
+				"max",
+				"maxe",
+				"maxen",
+				"maxenc",
+				"maxence",
+			}
+
+			time.Sleep(time.Second)
+
+			for _, s := range name {
+				time.Sleep(time.Millisecond * 15)
+				hello.Greeting = s
+				app.Render(hello)
+			}
+		}()
 	}
 
 	app.Run()
