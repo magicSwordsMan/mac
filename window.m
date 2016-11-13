@@ -59,6 +59,7 @@ void *Window_New(Window__ w) {
   NSString *id = [NSString stringWithUTF8String:w.ID];
   WindowController *controller = [[WindowController alloc] initWithID:id];
   controller.window = win;
+  win.delegate = controller;
   win.windowController = controller;
 
   // WebView.
@@ -192,6 +193,40 @@ void Window_Resize(void *ptr, CGFloat width, CGFloat height) {
 
 - (void)userContentController:(WKUserContentController *)userContentController
       didReceiveScriptMessage:(WKScriptMessage *)message {
+}
+
+- (void)windowDidMiniaturize:(NSNotification *)notification {
+  onWindowMinimize((char *)self.ID.UTF8String);
+}
+
+- (void)windowDidDeminiaturize:(NSNotification *)notification {
+  onWindowDeminimize((char *)self.ID.UTF8String);
+}
+
+- (void)windowDidEnterFullScreen:(NSNotification *)notification {
+  onWindowFullScreen((char *)self.ID.UTF8String);
+}
+
+- (void)windowDidExitFullScreen:(NSNotification *)notification {
+  onWindowExitFullScreen((char *)self.ID.UTF8String);
+}
+
+- (void)windowDidMove:(NSNotification *)notification {
+  onWindowMove((char *)self.ID.UTF8String, self.window.frame.origin.x,
+               self.window.frame.origin.y);
+}
+
+- (void)windowDidResize:(NSNotification *)notification {
+  onWindowResize((char *)self.ID.UTF8String, self.window.frame.size.width,
+                 self.window.frame.size.height);
+}
+
+- (void)windowDidBecomeKey:(NSNotification *)notification {
+  onWindowFocus((char *)self.ID.UTF8String);
+}
+
+- (void)windowDidResignKey:(NSNotification *)notification {
+  onWindowBlur((char *)self.ID.UTF8String);
 }
 @end
 

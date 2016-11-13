@@ -35,6 +35,15 @@ func main() {
 			Height:         720,
 			Vibrancy:       app.VibeMediumLight,
 			TitlebarHidden: true,
+
+			OnMinimize:       func() { log.Info("OnMinimize") },
+			OnDeminimize:     func() { log.Info("OnDeminimize") },
+			OnFullScreen:     func() { log.Info("OnFullScreen") },
+			OnExitFullScreen: func() { log.Info("OnExitFullScreen") },
+			OnMove:           func(x float64, y float64) { log.Infof("OnMove (%v, %v)", x, y) },
+			OnResize:         func(w float64, h float64) { log.Infof("OnResize %vx%v", w, h) },
+			OnFocus:          func() { log.Info("OnFocus") },
+			OnBlur:           func() { log.Info("OnBlur") },
 		})
 
 		hello := &Hello{}
