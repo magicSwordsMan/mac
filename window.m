@@ -157,6 +157,22 @@ void Window_CallJS(void *ptr, const char *js) {
   [controller.webview evaluateJavaScript:javaScript completionHandler:nil];
 }
 
+void Window_Move(void *ptr, CGFloat x, CGFloat y) {
+  NSWindow *win = (__bridge NSWindow *)ptr;
+  CGPoint pos = NSMakePoint(x, y);
+
+  [win setFrameOrigin:pos];
+}
+
+void Window_Resize(void *ptr, CGFloat width, CGFloat height) {
+  NSWindow *win = (__bridge NSWindow *)ptr;
+  CGRect frame = win.frame;
+  frame.size.width = width;
+  frame.size.height = height;
+
+  [win setFrame:frame display:YES];
+}
+
 @implementation WindowController
 - (instancetype)initWithID:(NSString *)ID {
   self.ID = ID;

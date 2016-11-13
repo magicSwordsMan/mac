@@ -111,11 +111,11 @@ func (w *Window) Render(elem *markup.Element) {
 }
 
 func (w *Window) Move(x float64, y float64) {
-	// call method to move window
+	C.Window_Move(w.ptr, C.CGFloat(x), C.CGFloat(y))
 }
 
 func (w *Window) Resize(width float64, height float64) {
-	// call method to Resize window
+	C.Window_Resize(w.ptr, C.CGFloat(width), C.CGFloat(height))
 }
 
 func (w *Window) SetIcon(path string) {

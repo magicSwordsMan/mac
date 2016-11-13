@@ -57,6 +57,9 @@ func main() {
 				hello.Greeting = s
 				app.Render(hello)
 			}
+
+			win.Move(300, 300)
+			win.Resize(42, 42)
 		}()
 	}
 

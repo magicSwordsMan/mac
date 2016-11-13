@@ -22,3 +22,7 @@ _testmain.go
 *.exe
 *.test
 *.prof
+
+examples/hello/hello
+
+examples/hello/hello

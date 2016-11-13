@@ -42,5 +42,7 @@ void Window_SetWebview(NSWindow *win, WKWebView *webview);
 void Window_SetTitleBar(NSWindow *win, TitleBar *titleBar);
 void Window_Mount(void *ptr, const char *markup);
 void Window_CallJS(void *ptr, const char *js);
+void Window_Move(void *ptr, CGFloat x, CGFloat y);
+void Window_Resize(void *ptr, CGFloat width, CGFloat height);
 
 #endif /* window_h */
