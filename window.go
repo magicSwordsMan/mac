@@ -110,8 +110,22 @@ func (w *Window) Render(elem *markup.Element) {
 	C.Window_CallJS(w.ptr, ccall)
 }
 
+func (w *Window) Position() (x float64, y float64) {
+	frame := C.Window_Frame(w.ptr)
+	x = float64(frame.origin.x)
+	y = float64(frame.origin.y)
+	return
+}
+
 func (w *Window) Move(x float64, y float64) {
 	C.Window_Move(w.ptr, C.CGFloat(x), C.CGFloat(y))
+}
+
+func (w *Window) Size() (width float64, height float64) {
+	frame := C.Window_Frame(w.ptr)
+	width = float64(frame.size.width)
+	height = float64(frame.size.height)
+	return
 }
 
 func (w *Window) Resize(width float64, height float64) {

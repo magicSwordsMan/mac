@@ -157,6 +157,11 @@ void Window_CallJS(void *ptr, const char *js) {
   [controller.webview evaluateJavaScript:javaScript completionHandler:nil];
 }
 
+NSRect Window_Frame(void *ptr) {
+  NSWindow *win = (__bridge NSWindow *)ptr;
+  return win.frame;
+}
+
 void Window_Move(void *ptr, CGFloat x, CGFloat y) {
   NSWindow *win = (__bridge NSWindow *)ptr;
   CGPoint pos = NSMakePoint(x, y);

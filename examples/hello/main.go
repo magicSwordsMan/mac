@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/murlokswarm/app"
+	"github.com/murlokswarm/log"
 	_ "github.com/murlokswarm/mac"
 	"github.com/murlokswarm/markup"
 )
@@ -59,7 +60,13 @@ func main() {
 			}
 
 			win.Move(300, 300)
-			win.Resize(42, 42)
+			// win.Resize(42, 42)
+			w, h := win.Size()
+			log.Infof("win size: %vx%v", w, h)
+
+			x, y := win.Position()
+			log.Infof("win pos: (%v, %v)", x, y)
+
 		}()
 	}
 
