@@ -90,14 +90,15 @@ WKWebView *Window_NewWebview(WindowController *controller, NSString *HTML,
   WKWebViewConfiguration *conf = [[WKWebViewConfiguration alloc] init];
   conf.userContentController = userContentController;
 
-  WKWebView *webView = [[WKWebView alloc] initWithFrame:NSMakeRect(0, 0, 0, 0)
+  WKWebView *webview = [[WKWebView alloc] initWithFrame:NSMakeRect(0, 0, 0, 0)
                                           configuration:conf];
-  [webView setValue:@(NO) forKey:@"drawsBackground"];
-  webView.navigationDelegate = controller;
+  [webview setValue:@(NO) forKey:@"drawsBackground"];
+  webview.navigationDelegate = controller;
+  webview.UIDelegate = controller;
 
   // Page loading.
   NSURL *baseURL = [NSURL fileURLWithPath:resourcePath];
-  [webView loadHTMLString:HTML baseURL:baseURL];
+  [webview loadHTMLString:HTML baseURL:baseURL];
 
   while (dispatch_semaphore_wait(controller.sema, DISPATCH_TIME_NOW)) {
     [[NSRunLoop currentRunLoop]
@@ -105,7 +106,7 @@ WKWebView *Window_NewWebview(WindowController *controller, NSString *HTML,
         beforeDate:[NSDate dateWithTimeIntervalSinceNow:10]];
   }
 
-  return webView;
+  return webview;
 }
 
 void Window_SetWebview(NSWindow *win, WKWebView *webview) {
@@ -200,6 +201,39 @@ void Window_Close(const void *ptr) {
 
 - (void)userContentController:(WKUserContentController *)userContentController
       didReceiveScriptMessage:(WKScriptMessage *)message {
+  if ([message.name isEqual:@"Call"]) {
+    NSString *msg = (NSString *)message.body;
+    onJSCall((char *)msg.UTF8String);
+  }
+}
+
+- (void)webView:(WKWebView *)webView
+    decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction
+                    decisionHandler:
+                        (void (^)(WKNavigationActionPolicy))decisionHandler {
+  if (navigationAction.navigationType == WKNavigationTypeReload ||
+      navigationAction.navigationType == WKNavigationTypeOther) {
+
+    if (navigationAction.targetFrame.request != nil) {
+      decisionHandler(WKNavigationActionPolicyCancel);
+      return;
+    }
+
+    decisionHandler(WKNavigationActionPolicyAllow);
+    return;
+  }
+
+  NSURL *url = navigationAction.request.URL;
+  [[NSWorkspace sharedWorkspace] openURL:url];
+  decisionHandler(WKNavigationActionPolicyCancel);
+}
+
+- (void)webView:(WKWebView *)webView
+    runJavaScriptAlertPanelWithMessage:(NSString *)message
+                      initiatedByFrame:(WKFrameInfo *)frame
+                     completionHandler:(void (^)(void))completionHandler {
+  onJSAlert((char *)message.UTF8String);
+  completionHandler();
 }
 
 - (void)windowDidMiniaturize:(NSNotification *)notification {

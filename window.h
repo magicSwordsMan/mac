@@ -29,7 +29,7 @@ typedef struct Window__ {
 } Window__;
 
 @interface WindowController
-    : NSWindowController <NSWindowDelegate, WKNavigationDelegate,
+    : NSWindowController <NSWindowDelegate, WKNavigationDelegate, WKUIDelegate,
                           WKScriptMessageHandler>
 @property NSString *ID;
 @property(weak) WKWebView *webview;
