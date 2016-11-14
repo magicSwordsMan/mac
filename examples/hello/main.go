@@ -109,11 +109,11 @@ func main() {
 
 func newWindow() app.Contexter {
 	return app.NewWindow(app.Window{
-		Width:          1340,
-		Height:         720,
-		Vibrancy:       app.VibeMediumLight,
-		TitlebarHidden: true,
-		Title:          "main",
+		Width:    1340,
+		Height:   720,
+		Vibrancy: app.VibeMediumLight,
+		// TitlebarHidden: true,
+		Title: "main",
 
 		OnMinimize:       func() { log.Info("OnMinimize") },
 		OnDeminimize:     func() { log.Info("OnDeminimize") },
