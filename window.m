@@ -2,7 +2,7 @@
 #include "_cgo_export.h"
 #include "color.h"
 
-void *Window_New(Window__ w) {
+const void *Window_New(Window__ w) {
   NSRect contentRect = NSMakeRect(w.X, w.Y, w.Width, w.Height);
   NSUInteger styleMask =
       NSWindowStyleMaskTitled | NSWindowStyleMaskFullSizeContentView |
@@ -59,7 +59,10 @@ void *Window_New(Window__ w) {
   NSString *id = [NSString stringWithUTF8String:w.ID];
   WindowController *controller = [[WindowController alloc] initWithID:id];
   controller.window = win;
+  win.delegate = controller;
   win.windowController = controller;
+  win.windowController.windowFrameAutosaveName =
+      [NSString stringWithUTF8String:w.Title];
 
   // WebView.
   WKWebView *webview =
@@ -75,7 +78,7 @@ void *Window_New(Window__ w) {
   }
 
   [win.windowController showWindow:nil];
-  return (__bridge_retained void *)win;
+  return CFBridgingRetain(win);
 }
 
 WKWebView *Window_NewWebview(WindowController *controller, NSString *HTML,
@@ -149,12 +152,38 @@ void Window_SetTitleBar(NSWindow *win, TitleBar *titleBar) {
                                               titleBar)]];
 }
 
-void Window_CallJS(void *ptr, const char *js) {
+void Window_CallJS(const void *ptr, const char *js) {
   NSWindow *win = (__bridge NSWindow *)ptr;
   WindowController *controller = (WindowController *)win.windowController;
 
   NSString *javaScript = [NSString stringWithUTF8String:js];
   [controller.webview evaluateJavaScript:javaScript completionHandler:nil];
+}
+
+NSRect Window_Frame(const void *ptr) {
+  NSWindow *win = (__bridge NSWindow *)ptr;
+  return win.frame;
+}
+
+void Window_Move(const void *ptr, CGFloat x, CGFloat y) {
+  NSWindow *win = (__bridge NSWindow *)ptr;
+  CGPoint pos = NSMakePoint(x, y);
+
+  defer([win setFrameOrigin:pos];);
+}
+
+void Window_Resize(const void *ptr, CGFloat width, CGFloat height) {
+  NSWindow *win = (__bridge NSWindow *)ptr;
+  CGRect frame = win.frame;
+  frame.size.width = width;
+  frame.size.height = height;
+
+  defer([win setFrame:frame display:YES];);
+}
+
+void Window_Close(const void *ptr) {
+  NSWindow *win = (__bridge NSWindow *)ptr;
+  defer([win performClose:nil];);
 }
 
 @implementation WindowController
@@ -171,6 +200,50 @@ void Window_CallJS(void *ptr, const char *js) {
 
 - (void)userContentController:(WKUserContentController *)userContentController
       didReceiveScriptMessage:(WKScriptMessage *)message {
+}
+
+- (void)windowDidMiniaturize:(NSNotification *)notification {
+  onWindowMinimize((char *)self.ID.UTF8String);
+}
+
+- (void)windowDidDeminiaturize:(NSNotification *)notification {
+  onWindowDeminimize((char *)self.ID.UTF8String);
+}
+
+- (void)windowDidEnterFullScreen:(NSNotification *)notification {
+  onWindowFullScreen((char *)self.ID.UTF8String);
+}
+
+- (void)windowDidExitFullScreen:(NSNotification *)notification {
+  onWindowExitFullScreen((char *)self.ID.UTF8String);
+}
+
+- (void)windowDidMove:(NSNotification *)notification {
+  onWindowMove((char *)self.ID.UTF8String, self.window.frame.origin.x,
+               self.window.frame.origin.y);
+}
+
+- (void)windowDidResize:(NSNotification *)notification {
+  onWindowResize((char *)self.ID.UTF8String, self.window.frame.size.width,
+                 self.window.frame.size.height);
+}
+
+- (void)windowDidBecomeKey:(NSNotification *)notification {
+  onWindowFocus((char *)self.ID.UTF8String);
+}
+
+- (void)windowDidResignKey:(NSNotification *)notification {
+  onWindowBlur((char *)self.ID.UTF8String);
+}
+
+- (BOOL)windowShouldClose:(id)sender {
+  return onWindowClose((char *)self.ID.UTF8String);
+}
+
+- (void)windowWillClose:(NSNotification *)notification {
+  onWindowCloseFinal((char *)self.ID.UTF8String);
+  CFBridgingRelease((__bridge void *)self.window);
+  self.window = nil;
 }
 @end
 

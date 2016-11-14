@@ -16,9 +16,10 @@ import (
 )
 
 type Window struct {
-	id   uid.ID
-	ptr  unsafe.Pointer
-	root markup.Componer
+	id     uid.ID
+	ptr    unsafe.Pointer
+	root   markup.Componer
+	config app.Window
 }
 
 // NewWindow creates a window.
@@ -61,8 +62,9 @@ func NewWindow(w app.Window) *Window {
 	defer free(unsafe.Pointer(cwin.ResourcePath))
 
 	win := &Window{
-		id:  id,
-		ptr: C.Window_New(cwin),
+		id:     id,
+		ptr:    C.Window_New(cwin),
+		config: w,
 	}
 
 	app.RegisterContext(win)
@@ -110,12 +112,26 @@ func (w *Window) Render(elem *markup.Element) {
 	C.Window_CallJS(w.ptr, ccall)
 }
 
+func (w *Window) Position() (x float64, y float64) {
+	frame := C.Window_Frame(w.ptr)
+	x = float64(frame.origin.x)
+	y = float64(frame.origin.y)
+	return
+}
+
 func (w *Window) Move(x float64, y float64) {
-	// call method to move window
+	C.Window_Move(w.ptr, C.CGFloat(x), C.CGFloat(y))
+}
+
+func (w *Window) Size() (width float64, height float64) {
+	frame := C.Window_Frame(w.ptr)
+	width = float64(frame.size.width)
+	height = float64(frame.size.height)
+	return
 }
 
 func (w *Window) Resize(width float64, height float64) {
-	// call method to Resize window
+	C.Window_Resize(w.ptr, C.CGFloat(width), C.CGFloat(height))
 }
 
 func (w *Window) SetIcon(path string) {
@@ -123,6 +139,145 @@ func (w *Window) SetIcon(path string) {
 }
 
 func (w *Window) Close() {
-	markup.Dismount(w.root)
-	app.UnregisterContext(w)
+	C.Window_Close(w.ptr)
+}
+
+//export onWindowMinimize
+func onWindowMinimize(cid *C.char) {
+	ctx, err := app.ContextByID(uid.ID(C.GoString(cid)))
+	if err != nil {
+		return
+	}
+
+	win := ctx.(*Window)
+
+	if win.config.OnMinimize != nil {
+		win.config.OnMinimize()
+	}
+}
+
+//export onWindowDeminimize
+func onWindowDeminimize(cid *C.char) {
+	ctx, err := app.ContextByID(uid.ID(C.GoString(cid)))
+	if err != nil {
+		return
+	}
+
+	win := ctx.(*Window)
+
+	if win.config.OnDeminimize != nil {
+		win.config.OnDeminimize()
+	}
+}
+
+//export onWindowFullScreen
+func onWindowFullScreen(cid *C.char) {
+	ctx, err := app.ContextByID(uid.ID(C.GoString(cid)))
+	if err != nil {
+		return
+	}
+
+	win := ctx.(*Window)
+
+	if win.config.OnFullScreen != nil {
+		win.config.OnFullScreen()
+	}
+}
+
+//export onWindowExitFullScreen
+func onWindowExitFullScreen(cid *C.char) {
+	ctx, err := app.ContextByID(uid.ID(C.GoString(cid)))
+	if err != nil {
+		return
+	}
+
+	win := ctx.(*Window)
+
+	if win.config.OnExitFullScreen != nil {
+		win.config.OnExitFullScreen()
+	}
+}
+
+//export onWindowMove
+func onWindowMove(cid *C.char, x C.CGFloat, y C.CGFloat) {
+	ctx, err := app.ContextByID(uid.ID(C.GoString(cid)))
+	if err != nil {
+		return
+	}
+
+	win := ctx.(*Window)
+
+	if win.config.OnMove != nil {
+		win.config.OnMove(float64(x), float64(y))
+	}
+}
+
+//export onWindowResize
+func onWindowResize(cid *C.char, width C.CGFloat, height C.CGFloat) {
+	ctx, err := app.ContextByID(uid.ID(C.GoString(cid)))
+	if err != nil {
+		return
+	}
+
+	win := ctx.(*Window)
+
+	if win.config.OnResize != nil {
+		win.config.OnResize(float64(width), float64(height))
+	}
+}
+
+//export onWindowFocus
+func onWindowFocus(cid *C.char) {
+	ctx, err := app.ContextByID(uid.ID(C.GoString(cid)))
+	if err != nil {
+		return
+	}
+
+	win := ctx.(*Window)
+
+	if win.config.OnFocus != nil {
+		win.config.OnFocus()
+	}
+}
+
+//export onWindowBlur
+func onWindowBlur(cid *C.char) {
+	ctx, err := app.ContextByID(uid.ID(C.GoString(cid)))
+	if err != nil {
+		return
+	}
+
+	win := ctx.(*Window)
+
+	if win.config.OnBlur != nil {
+		win.config.OnBlur()
+	}
+}
+
+//export onWindowClose
+func onWindowClose(cid *C.char) bool {
+	ctx, err := app.ContextByID(uid.ID(C.GoString(cid)))
+	if err != nil {
+		return true
+	}
+
+	win := ctx.(*Window)
+
+	if win.config.OnClose != nil {
+		return win.config.OnClose()
+	}
+
+	return true
+}
+
+//export onWindowCloseFinal
+func onWindowCloseFinal(cid *C.char) {
+	ctx, err := app.ContextByID(uid.ID(C.GoString(cid)))
+	if err != nil {
+		return
+	}
+
+	win := ctx.(*Window)
+	markup.Dismount(win.root)
+	app.UnregisterContext(win)
 }
