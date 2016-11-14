@@ -2,7 +2,7 @@
 #include "_cgo_export.h"
 #include "color.h"
 
-void *Window_New(Window__ w) {
+const void *Window_New(Window__ w) {
   NSRect contentRect = NSMakeRect(w.X, w.Y, w.Width, w.Height);
   NSUInteger styleMask =
       NSWindowStyleMaskTitled | NSWindowStyleMaskFullSizeContentView |
@@ -61,6 +61,8 @@ void *Window_New(Window__ w) {
   controller.window = win;
   win.delegate = controller;
   win.windowController = controller;
+  win.windowController.windowFrameAutosaveName =
+      [NSString stringWithUTF8String:w.Title];
 
   // WebView.
   WKWebView *webview =
@@ -76,7 +78,7 @@ void *Window_New(Window__ w) {
   }
 
   [win.windowController showWindow:nil];
-  return (__bridge_retained void *)win;
+  return CFBridgingRetain(win);
 }
 
 WKWebView *Window_NewWebview(WindowController *controller, NSString *HTML,
@@ -150,7 +152,7 @@ void Window_SetTitleBar(NSWindow *win, TitleBar *titleBar) {
                                               titleBar)]];
 }
 
-void Window_CallJS(void *ptr, const char *js) {
+void Window_CallJS(const void *ptr, const char *js) {
   NSWindow *win = (__bridge NSWindow *)ptr;
   WindowController *controller = (WindowController *)win.windowController;
 
@@ -158,25 +160,30 @@ void Window_CallJS(void *ptr, const char *js) {
   [controller.webview evaluateJavaScript:javaScript completionHandler:nil];
 }
 
-NSRect Window_Frame(void *ptr) {
+NSRect Window_Frame(const void *ptr) {
   NSWindow *win = (__bridge NSWindow *)ptr;
   return win.frame;
 }
 
-void Window_Move(void *ptr, CGFloat x, CGFloat y) {
+void Window_Move(const void *ptr, CGFloat x, CGFloat y) {
   NSWindow *win = (__bridge NSWindow *)ptr;
   CGPoint pos = NSMakePoint(x, y);
 
-  [win setFrameOrigin:pos];
+  defer([win setFrameOrigin:pos];);
 }
 
-void Window_Resize(void *ptr, CGFloat width, CGFloat height) {
+void Window_Resize(const void *ptr, CGFloat width, CGFloat height) {
   NSWindow *win = (__bridge NSWindow *)ptr;
   CGRect frame = win.frame;
   frame.size.width = width;
   frame.size.height = height;
 
-  [win setFrame:frame display:YES];
+  defer([win setFrame:frame display:YES];);
+}
+
+void Window_Close(const void *ptr) {
+  NSWindow *win = (__bridge NSWindow *)ptr;
+  defer([win performClose:nil];);
 }
 
 @implementation WindowController
@@ -227,6 +234,16 @@ void Window_Resize(void *ptr, CGFloat width, CGFloat height) {
 
 - (void)windowDidResignKey:(NSNotification *)notification {
   onWindowBlur((char *)self.ID.UTF8String);
+}
+
+- (BOOL)windowShouldClose:(id)sender {
+  return onWindowClose((char *)self.ID.UTF8String);
+}
+
+- (void)windowWillClose:(NSNotification *)notification {
+  onWindowCloseFinal((char *)self.ID.UTF8String);
+  CFBridgingRelease((__bridge void *)self.window);
+  self.window = nil;
 }
 @end
 

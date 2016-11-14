@@ -4,6 +4,12 @@
 #import <Cocoa/Cocoa.h>
 #import <WebKit/Webkit.h>
 
+// This macro is used to defer the execution of a block of code in the main
+// event loop.
+#define defer(code)                                                            \
+  dispatch_async(dispatch_get_main_queue(), ^{                                 \
+                     code})
+
 typedef struct Window__ {
   char *ID;
   char *Title;
@@ -35,15 +41,16 @@ typedef struct Window__ {
 @interface TitleBar : NSView
 @end
 
-void *Window_New(Window__ w);
+const void *Window_New(Window__ w);
 WKWebView *Window_NewWebview(WindowController *controller, NSString *HTML,
                              NSString *resourcePath);
 void Window_SetWebview(NSWindow *win, WKWebView *webview);
 void Window_SetTitleBar(NSWindow *win, TitleBar *titleBar);
-void Window_Mount(void *ptr, const char *markup);
-void Window_CallJS(void *ptr, const char *js);
-NSRect Window_Frame(void *ptr);
-void Window_Move(void *ptr, CGFloat x, CGFloat y);
-void Window_Resize(void *ptr, CGFloat width, CGFloat height);
+void Window_Mount(const void *ptr, const char *markup);
+void Window_CallJS(const void *ptr, const char *js);
+NSRect Window_Frame(const void *ptr);
+void Window_Move(const void *ptr, CGFloat x, CGFloat y);
+void Window_Resize(const void *ptr, CGFloat width, CGFloat height);
+void Window_Close(const void *ptr);
 
 #endif /* window_h */

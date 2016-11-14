@@ -139,15 +139,14 @@ func (w *Window) SetIcon(path string) {
 }
 
 func (w *Window) Close() {
-	markup.Dismount(w.root)
-	app.UnregisterContext(w)
+	C.Window_Close(w.ptr)
 }
 
 //export onWindowMinimize
 func onWindowMinimize(cid *C.char) {
 	ctx, err := app.ContextByID(uid.ID(C.GoString(cid)))
 	if err != nil {
-		log.Error(err)
+		return
 	}
 
 	win := ctx.(*Window)
@@ -161,7 +160,7 @@ func onWindowMinimize(cid *C.char) {
 func onWindowDeminimize(cid *C.char) {
 	ctx, err := app.ContextByID(uid.ID(C.GoString(cid)))
 	if err != nil {
-		log.Error(err)
+		return
 	}
 
 	win := ctx.(*Window)
@@ -175,7 +174,7 @@ func onWindowDeminimize(cid *C.char) {
 func onWindowFullScreen(cid *C.char) {
 	ctx, err := app.ContextByID(uid.ID(C.GoString(cid)))
 	if err != nil {
-		log.Error(err)
+		return
 	}
 
 	win := ctx.(*Window)
@@ -189,7 +188,7 @@ func onWindowFullScreen(cid *C.char) {
 func onWindowExitFullScreen(cid *C.char) {
 	ctx, err := app.ContextByID(uid.ID(C.GoString(cid)))
 	if err != nil {
-		log.Error(err)
+		return
 	}
 
 	win := ctx.(*Window)
@@ -203,7 +202,7 @@ func onWindowExitFullScreen(cid *C.char) {
 func onWindowMove(cid *C.char, x C.CGFloat, y C.CGFloat) {
 	ctx, err := app.ContextByID(uid.ID(C.GoString(cid)))
 	if err != nil {
-		log.Error(err)
+		return
 	}
 
 	win := ctx.(*Window)
@@ -217,7 +216,7 @@ func onWindowMove(cid *C.char, x C.CGFloat, y C.CGFloat) {
 func onWindowResize(cid *C.char, width C.CGFloat, height C.CGFloat) {
 	ctx, err := app.ContextByID(uid.ID(C.GoString(cid)))
 	if err != nil {
-		log.Error(err)
+		return
 	}
 
 	win := ctx.(*Window)
@@ -231,7 +230,7 @@ func onWindowResize(cid *C.char, width C.CGFloat, height C.CGFloat) {
 func onWindowFocus(cid *C.char) {
 	ctx, err := app.ContextByID(uid.ID(C.GoString(cid)))
 	if err != nil {
-		log.Error(err)
+		return
 	}
 
 	win := ctx.(*Window)
@@ -245,7 +244,7 @@ func onWindowFocus(cid *C.char) {
 func onWindowBlur(cid *C.char) {
 	ctx, err := app.ContextByID(uid.ID(C.GoString(cid)))
 	if err != nil {
-		log.Error(err)
+		return
 	}
 
 	win := ctx.(*Window)
@@ -253,4 +252,32 @@ func onWindowBlur(cid *C.char) {
 	if win.config.OnBlur != nil {
 		win.config.OnBlur()
 	}
+}
+
+//export onWindowClose
+func onWindowClose(cid *C.char) bool {
+	ctx, err := app.ContextByID(uid.ID(C.GoString(cid)))
+	if err != nil {
+		return true
+	}
+
+	win := ctx.(*Window)
+
+	if win.config.OnClose != nil {
+		return win.config.OnClose()
+	}
+
+	return true
+}
+
+//export onWindowCloseFinal
+func onWindowCloseFinal(cid *C.char) {
+	ctx, err := app.ContextByID(uid.ID(C.GoString(cid)))
+	if err != nil {
+		return
+	}
+
+	win := ctx.(*Window)
+	markup.Dismount(win.root)
+	app.UnregisterContext(win)
 }

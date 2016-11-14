@@ -9,6 +9,10 @@ import (
 	"github.com/murlokswarm/markup"
 )
 
+var (
+	win app.Contexter
+)
+
 func init() {
 	markup.RegisterComponent("Hello", func() markup.Componer {
 		return &Hello{}
@@ -30,21 +34,7 @@ func (h *Hello) Render() string {
 
 func main() {
 	app.OnLaunch = func() {
-		win := app.NewWindow(app.Window{
-			Width:          1340,
-			Height:         720,
-			Vibrancy:       app.VibeMediumLight,
-			TitlebarHidden: true,
-
-			OnMinimize:       func() { log.Info("OnMinimize") },
-			OnDeminimize:     func() { log.Info("OnDeminimize") },
-			OnFullScreen:     func() { log.Info("OnFullScreen") },
-			OnExitFullScreen: func() { log.Info("OnExitFullScreen") },
-			OnMove:           func(x float64, y float64) { log.Infof("OnMove (%v, %v)", x, y) },
-			OnResize:         func(w float64, h float64) { log.Infof("OnResize %vx%v", w, h) },
-			OnFocus:          func() { log.Info("OnFocus") },
-			OnBlur:           func() { log.Info("OnBlur") },
-		})
+		win = newWindow()
 
 		hello := &Hello{}
 		win.Mount(hello)
@@ -68,7 +58,7 @@ func main() {
 				app.Render(hello)
 			}
 
-			win.Move(300, 300)
+			// win.Move(300, 300)
 			// win.Resize(42, 42)
 			w, h := win.Size()
 			log.Infof("win size: %vx%v", w, h)
@@ -76,8 +66,44 @@ func main() {
 			x, y := win.Position()
 			log.Infof("win pos: (%v, %v)", x, y)
 
+			// win.Close()
+
 		}()
 	}
 
+	app.OnReopen = func(hasVisibleWindow bool) {
+		if win != nil {
+			return
+		}
+
+		win = newWindow()
+		hello := &Hello{}
+		win.Mount(hello)
+	}
+
 	app.Run()
+}
+
+func newWindow() app.Contexter {
+	return app.NewWindow(app.Window{
+		Width:          1340,
+		Height:         720,
+		Vibrancy:       app.VibeMediumLight,
+		TitlebarHidden: true,
+		Title:          "main",
+
+		OnMinimize:       func() { log.Info("OnMinimize") },
+		OnDeminimize:     func() { log.Info("OnDeminimize") },
+		OnFullScreen:     func() { log.Info("OnFullScreen") },
+		OnExitFullScreen: func() { log.Info("OnExitFullScreen") },
+		OnMove:           func(x float64, y float64) { log.Infof("OnMove (%v, %v)", x, y) },
+		OnResize:         func(w float64, h float64) { log.Infof("OnResize %vx%v", w, h) },
+		OnFocus:          func() { log.Info("OnFocus") },
+		OnBlur:           func() { log.Info("OnBlur") },
+		OnClose: func() bool {
+			log.Info("OnClose")
+			win = nil
+			return true
+		},
+	})
 }
