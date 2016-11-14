@@ -8,7 +8,6 @@ import (
 
 //export onJSCall
 func onJSCall(msg *C.char) {
-	log.Warn(msg)
 	app.CallComponentMethod(C.GoString(msg))
 }
 
