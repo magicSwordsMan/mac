@@ -35,8 +35,6 @@ func NewWindow(w app.Window) *Window {
 		CSS:      app.Resources().CSS(),
 	}
 
-	log.Info(htmlCtx.HTML())
-
 	cwin := C.Window__{
 		ID:              C.CString(id.String()),
 		Title:           C.CString(w.Title),
@@ -81,13 +79,17 @@ func (w *Window) Mount(c markup.Componer) {
 	var html string
 	var err error
 
+	if w.root != nil {
+		markup.Dismount(w.root)
+	}
+
 	if err = markup.Mount(c, w.ID()); err != nil {
 		log.Panic(err)
 		return
 	}
 
 	if html, err = markup.ComponentToHTML(c); err != nil {
-		log.Panic(err)
+		log.Error(err)
 		return
 	}
 

@@ -1,8 +1,6 @@
 package main
 
 import (
-	"time"
-
 	"github.com/murlokswarm/app"
 	"github.com/murlokswarm/log"
 	_ "github.com/murlokswarm/mac"
@@ -26,10 +24,35 @@ type Hello struct {
 func (h *Hello) Render() string {
 	return `
 <div>
-    Hello, {{if .Greeting}}{{.Greeting}}{{else}}World{{end}}
-    <input type="text" placeholder="What is your name?" />
+    Hello,
+	<span>{{if .Greeting}}{{html .Greeting}}{{else}}World{{end}}</span>
+    <input type="text" 
+		   placeholder="What is your name?" 
+		   _onchange="OnInputChange" 
+		   _onkeyup="OnKeyUp"
+		   _onmousewheel="OnWheel"
+		   _onclick="OnClick"
+		   value="{{html .Greeting}}"  
+		   autofocus="true" />
 </div>
     `
+}
+
+func (h *Hello) OnInputChange(e app.ChangeArg) {
+	h.Greeting = e.Value
+	app.Render(h)
+}
+
+func (h *Hello) OnKeyUp(e app.KeyboardArg) {
+	log.Infof("%+v", e)
+}
+
+func (h *Hello) OnWheel(e app.WheelArg) {
+	log.Infof("%+v", e)
+}
+
+func (h *Hello) OnClick(e app.MouseArg) {
+	log.Infof("%+v", e)
 }
 
 func main() {
@@ -39,36 +62,36 @@ func main() {
 		hello := &Hello{}
 		win.Mount(hello)
 
-		go func() {
-			name := []string{
-				"m",
-				"ma",
-				"max",
-				"maxe",
-				"maxen",
-				"maxenc",
-				"maxence",
-			}
+		// go func() {
+		// name := []string{
+		// 	"m",
+		// 	"ma",
+		// 	"max",
+		// 	"maxe",
+		// 	"maxen",
+		// 	"maxenc",
+		// 	"maxence",
+		// }
 
-			time.Sleep(time.Second)
+		// time.Sleep(time.Second)
 
-			for _, s := range name {
-				time.Sleep(time.Millisecond * 15)
-				hello.Greeting = s
-				app.Render(hello)
-			}
+		// for _, s := range name {
+		// 	time.Sleep(time.Millisecond * 15)
+		// 	hello.Greeting = s
+		// 	app.Render(hello)
+		// }
 
-			// win.Move(300, 300)
-			// win.Resize(42, 42)
-			w, h := win.Size()
-			log.Infof("win size: %vx%v", w, h)
+		// win.Move(300, 300)
+		// win.Resize(42, 42)
+		// w, h := win.Size()
+		// log.Infof("win size: %vx%v", w, h)
 
-			x, y := win.Position()
-			log.Infof("win pos: (%v, %v)", x, y)
+		// x, y := win.Position()
+		// log.Infof("win pos: (%v, %v)", x, y)
 
-			// win.Close()
+		// win.Close()
 
-		}()
+		// }()
 	}
 
 	app.OnReopen = func(hasVisibleWindow bool) {
