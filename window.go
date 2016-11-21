@@ -16,10 +16,10 @@ import (
 )
 
 type Window struct {
-	id     uid.ID
-	ptr    unsafe.Pointer
-	root   markup.Componer
-	config app.Window
+	id        uid.ID
+	ptr       unsafe.Pointer
+	component markup.Componer
+	config    app.Window
 }
 
 // NewWindow creates a window.
@@ -79,21 +79,19 @@ func (w *Window) Mount(c markup.Componer) {
 	var html string
 	var err error
 
-	if w.root != nil {
-		markup.Dismount(w.root)
+	if w.component != nil {
+		markup.Dismount(w.component)
 	}
 
-	if err = markup.Mount(c, w.ID()); err != nil {
+	w.component = c
+
+	if _, err = markup.Mount(c, w.ID()); err != nil {
 		log.Panic(err)
-		return
 	}
 
 	if html, err = markup.ComponentToHTML(c); err != nil {
-		log.Error(err)
-		return
+		log.Panic(err)
 	}
-
-	w.root = c
 
 	html = strconv.Quote(html)
 	call := fmt.Sprintf(`Mount("%v", %v)`, w.ID(), html)
@@ -280,6 +278,6 @@ func onWindowCloseFinal(cid *C.char) {
 	}
 
 	win := ctx.(*Window)
-	markup.Dismount(win.root)
+	markup.Dismount(win.component)
 	app.UnregisterContext(win)
 }

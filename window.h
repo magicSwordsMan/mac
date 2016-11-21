@@ -4,28 +4,22 @@
 #import <Cocoa/Cocoa.h>
 #import <WebKit/Webkit.h>
 
-// This macro is used to defer the execution of a block of code in the main
-// event loop.
-#define defer(code)                                                            \
-  dispatch_async(dispatch_get_main_queue(), ^{                                 \
-                     code})
-
 typedef struct Window__ {
-  char *ID;
-  char *Title;
+  const char *ID;
+  const char *Title;
   CGFloat X;
   CGFloat Y;
   CGFloat Width;
   CGFloat Height;
-  char *BackgroundColor;
+  const char *BackgroundColor;
   NSVisualEffectMaterial Vibrancy;
   BOOL Borderless;
   BOOL FixedSize;
   BOOL CloseHidden;
   BOOL MinimizeHidden;
   BOOL TitlebarHidden;
-  char *HTML;
-  char *ResourcePath;
+  const char *HTML;
+  const char *ResourcePath;
 } Window__;
 
 @interface WindowController

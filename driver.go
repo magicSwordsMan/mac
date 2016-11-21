@@ -19,6 +19,8 @@ import (
 type Driver struct {
 	ptr       unsafe.Pointer
 	resources app.ResourcePath
+	appMenu   app.Contexter
+	dock      app.Contexter
 }
 
 // NewDriver creates a new MacOS driver.
@@ -33,6 +35,8 @@ func NewDriver() *Driver {
 	return &Driver{
 		ptr:       C.Driver_Init(),
 		resources: resources,
+		appMenu:   NewAppMenu(),
+		dock:      NewDock(),
 	}
 }
 
@@ -52,11 +56,11 @@ func (d *Driver) NewContext(ctx interface{}) app.Contexter {
 }
 
 func (d *Driver) AppMenu() app.Contexter {
-	return nil
+	return d.appMenu
 }
 
 func (d *Driver) Dock() app.Contexter {
-	return nil
+	return d.dock
 }
 
 func (d *Driver) Resources() app.ResourcePath {

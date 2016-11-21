@@ -1,6 +1,8 @@
 package main
 
 import (
+	"time"
+
 	"github.com/murlokswarm/app"
 	"github.com/murlokswarm/log"
 	_ "github.com/murlokswarm/mac"
@@ -56,42 +58,52 @@ func (h *Hello) OnClick(e app.MouseArg) {
 }
 
 func main() {
+
 	app.OnLaunch = func() {
+		menu := &AppMainMenu{Sep: true}
+		app.Menu().Mount(menu)
+
+		dock := &AppMainMenu{}
+		app.Dock().Mount(dock)
+
 		win = newWindow()
 
 		hello := &Hello{}
 		win.Mount(hello)
 
-		// go func() {
-		// name := []string{
-		// 	"m",
-		// 	"ma",
-		// 	"max",
-		// 	"maxe",
-		// 	"maxen",
-		// 	"maxenc",
-		// 	"maxence",
-		// }
+		go func() {
+			// name := []string{
+			// 	"m",
+			// 	"ma",
+			// 	"max",
+			// 	"maxe",
+			// 	"maxen",
+			// 	"maxenc",
+			// 	"maxence",
+			// }
 
-		// time.Sleep(time.Second)
+			time.Sleep(time.Second * 3)
+			menu.CustomTitle = "La vie est belle"
+			menu.Sep = false
+			app.Render(menu)
 
-		// for _, s := range name {
-		// 	time.Sleep(time.Millisecond * 15)
-		// 	hello.Greeting = s
-		// 	app.Render(hello)
-		// }
+			// for _, s := range name {
+			// 	time.Sleep(time.Millisecond * 15)
+			// 	hello.Greeting = s
+			// 	app.Render(hello)
+			// }
 
-		// win.Move(300, 300)
-		// win.Resize(42, 42)
-		// w, h := win.Size()
-		// log.Infof("win size: %vx%v", w, h)
+			// win.Move(300, 300)
+			// win.Resize(42, 42)
+			// w, h := win.Size()
+			// log.Infof("win size: %vx%v", w, h)
 
-		// x, y := win.Position()
-		// log.Infof("win pos: (%v, %v)", x, y)
+			// x, y := win.Position()
+			// log.Infof("win pos: (%v, %v)", x, y)
 
-		// win.Close()
+			// win.Close()
 
-		// }()
+		}()
 	}
 
 	app.OnReopen = func(hasVisibleWindow bool) {
@@ -111,7 +123,7 @@ func newWindow() app.Contexter {
 	return app.NewWindow(app.Window{
 		Width:    1340,
 		Height:   720,
-		Vibrancy: app.VibeMediumLight,
+		Vibrancy: app.VibeDark,
 		// TitlebarHidden: true,
 		Title: "main",
 

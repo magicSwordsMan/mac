@@ -1,5 +1,7 @@
 #include "driver.h"
 #include "_cgo_export.h"
+#include "mac.h"
+#include "menu.h"
 
 @implementation DriverDelegate
 - (instancetype)init {
@@ -39,6 +41,10 @@
 - (void)applicationWillTerminate:(NSNotification *)aNotification {
   onFinalize();
 }
+
+- (NSMenu *)applicationDockMenu:(NSApplication *)sender {
+  return self.dock;
+}
 @end
 
 const void *Driver_Init() {
@@ -59,4 +65,16 @@ void Driver_Terminate() { [NSApp terminate:NSApp]; }
 const char *Driver_Resources() {
   NSBundle *mainBundle = [NSBundle mainBundle];
   return mainBundle.resourcePath.UTF8String;
+}
+
+void Driver_SetAppMenu(const void *menuPtr) {
+  Menu *menu = (__bridge Menu *)menuPtr;
+
+  defer(NSApp.mainMenu = menu.Root;);
+}
+
+void Driver_SetDockMenu(const void *dockPtr) {
+  Menu *menu = (__bridge Menu *)dockPtr;
+  DriverDelegate *delegate = NSApp.delegate;
+  delegate.dock = menu.Root;
 }
