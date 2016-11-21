@@ -30,7 +30,7 @@ func (d *Dock) Mount(c markup.Componer) {
 
 func (d *Dock) SetIcon(path string) {
 	if _, err := os.Stat(path); len(path) != 0 && err != nil {
-		log.Errorf("%v doesn't exists", path)
+		log.Error(err)
 		return
 	}
 

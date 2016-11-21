@@ -59,6 +59,13 @@ void Menu_MountItem(const void *ptr, MenuItem__ it) {
   item.enabled = !it.Disabled;
   item.IsSeparator = it.Separator;
 
+  NSString *icon = [NSString stringWithUTF8String:it.Icon];
+  if (icon.length != 0) {
+    item.image = [[NSImage alloc] initByReferencingFile:icon];
+  } else {
+    item.image = nil;
+  }
+
   [item setSelector:[NSString stringWithUTF8String:it.Selector]];
   [item setShortcut:[NSString stringWithUTF8String:it.Shortcut]];
   [item setSeparator];

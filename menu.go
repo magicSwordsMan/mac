@@ -11,6 +11,8 @@ import (
 
 	"fmt"
 
+	"os"
+
 	"github.com/murlokswarm/app"
 	"github.com/murlokswarm/log"
 	"github.com/murlokswarm/markup"
@@ -138,7 +140,9 @@ func (m *Menu) mountContainer(elem *markup.Element) error {
 	return nil
 }
 
-func (m *Menu) mountItem(elem *markup.Element) error {
+func (m *Menu) mountItem(elem *markup.Element) (err error) {
+	var iconPath string
+
 	if elem.Parent == nil || elem.Parent.Name != "menu" {
 		return fmt.Errorf("%v should have a menu as parent: %v", elem, elem.Parent)
 	}
@@ -154,10 +158,18 @@ func (m *Menu) mountItem(elem *markup.Element) error {
 	isDisabled, _ := strconv.ParseBool(disabled.Value)
 	isSeparator, _ := strconv.ParseBool(separator.Value)
 
+	if len(icon.Value) != 0 {
+		iconPath = app.Resources().Join(icon.Value)
+
+		if _, err = os.Stat(iconPath); err != nil {
+			return
+		}
+	}
+
 	item := C.MenuItem__{
 		ID:        C.CString(elem.ID.String()),
 		Label:     C.CString(label.Value),
-		Icon:      C.CString(icon.Value),
+		Icon:      C.CString(iconPath),
 		Shortcut:  C.CString(shortcut.Value),
 		Selector:  C.CString(selector.Value),
 		OnClick:   C.CString(onclick.Value),
@@ -173,7 +185,7 @@ func (m *Menu) mountItem(elem *markup.Element) error {
 	defer free(unsafe.Pointer(item.OnClick))
 
 	C.Menu_MountItem(m.ptr, item)
-	return nil
+	return
 }
 
 func (m *Menu) associate(parent *markup.Element, child *markup.Element) {

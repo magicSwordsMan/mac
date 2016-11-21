@@ -21,7 +21,10 @@ func (m *AppMainMenu) Render() string {
     <menu label="app">
         <menuitem label="About" selector="orderFrontStandardAboutPanel:" />
         <menuitem label="Quit" shortcut="meta+q" selector="terminate:" separator="{{.Sep}}" />
-        <menuitem label="{{if .CustomTitle}}{{.CustomTitle}}{{else}}Booooooo{{end}}" shortcut="ctrl+c" _onclick="OnCustomMenuClick" />
+        <menuitem label="{{if .CustomTitle}}{{.CustomTitle}}{{else}}Booooooo{{end}}" 
+                  shortcut="ctrl+c" 
+                  _onclick="OnCustomMenuClick" 
+                  icon="contexticon.png" />
     </menu>
     <WindowMenu />
 </menu>
