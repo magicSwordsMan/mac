@@ -78,3 +78,18 @@ void Driver_SetDockMenu(const void *dockPtr) {
   DriverDelegate *delegate = NSApp.delegate;
   delegate.dock = menu.Root;
 }
+
+void Driver_SetDockIcon(const char *path) {
+  NSString *p = [NSString stringWithUTF8String:path];
+
+  if (p.length != 0) {
+    NSApp.applicationIconImage = [[NSImage alloc] initByReferencingFile:p];
+    return;
+  }
+
+  NSApp.applicationIconImage = nil;
+}
+
+void Driver_SetDockBadge(const char *str) {
+  [NSApp.dockTile setBadgeLabel:[NSString stringWithUTF8String:str]];
+}

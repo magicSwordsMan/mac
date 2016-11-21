@@ -138,6 +138,10 @@ func (w *Window) SetIcon(path string) {
 	return
 }
 
+func (w *Window) SetBadge(v string) {
+	return
+}
+
 func (w *Window) Close() {
 	C.Window_Close(w.ptr)
 }

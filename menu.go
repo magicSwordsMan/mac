@@ -207,7 +207,9 @@ func (m *Menu) Resize(width float64, height float64) {
 }
 
 func (m *Menu) SetIcon(path string) {
-	return
+}
+
+func (m *Menu) SetBadge(v string) {
 }
 
 func (m *Menu) Close() {

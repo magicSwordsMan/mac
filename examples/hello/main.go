@@ -65,6 +65,8 @@ func main() {
 
 		dock := &AppMainMenu{}
 		app.Dock().Mount(dock)
+		app.Dock().SetBadge("42")
+		app.Dock().SetIcon(app.Resources().Join("contexticon.png"))
 
 		win = newWindow()
 
@@ -86,6 +88,9 @@ func main() {
 			menu.CustomTitle = "La vie est belle"
 			menu.Sep = false
 			app.Render(menu)
+			app.Dock().SetBadge("")
+			app.Dock().SetIcon(app.Resources().Join("dsffa.png"))
+			app.Dock().SetIcon("")
 
 			// for _, s := range name {
 			// 	time.Sleep(time.Millisecond * 15)
