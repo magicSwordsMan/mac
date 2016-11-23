@@ -79,6 +79,8 @@ func (w *Window) Mount(c markup.Componer) {
 	var html string
 	var err error
 
+	ensureLaunched()
+
 	if w.component != nil {
 		markup.Dismount(w.component)
 	}
@@ -103,6 +105,8 @@ func (w *Window) Mount(c markup.Componer) {
 }
 
 func (w *Window) Render(elem *markup.Element) {
+	ensureLaunched()
+
 	html := strconv.Quote(elem.HTML())
 	call := fmt.Sprintf(`Render("%v", %v)`, elem.ID, html)
 

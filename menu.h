@@ -37,7 +37,7 @@ typedef struct MenuItem__ {
 - (void)clicked:(id)sender;
 @end
 
-@interface Menu : NSObject
+@interface Menu : NSObject <NSMenuDelegate>
 @property NSString *ID;
 @property NSMutableDictionary *Elems;
 @property MenuContainer *Root;
@@ -52,6 +52,5 @@ void Menu_MountContainer(const void *ptr, MenuContainer__ container);
 void Menu_MountItem(const void *ptr, MenuItem__ item);
 void Menu_Associate(const void *ptr, const char *parentID, const char *childID);
 void Menu_Clear(const void *ptr);
-void Menu_Close(const void *ptr);
 
 #endif /* menu_h */

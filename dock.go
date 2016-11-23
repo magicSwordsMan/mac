@@ -46,7 +46,3 @@ func (d *Dock) SetBadge(v string) {
 
 	C.Driver_SetDockBadge(cv)
 }
-
-func (d *Dock) Close() {
-	log.Error("dock can't be closed")
-}

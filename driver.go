@@ -50,6 +50,9 @@ func (d *Driver) NewContext(ctx interface{}) app.Contexter {
 	case app.Window:
 		return NewWindow(c)
 
+	case app.ContextMenu:
+		return NewContextMenu()
+
 	default:
 		return app.NewZeroContext(reflect.TypeOf(c).String())
 	}

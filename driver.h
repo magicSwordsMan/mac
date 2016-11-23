@@ -17,5 +17,6 @@ void Driver_SetAppMenu(const void *menuPtr);
 void Driver_SetDockMenu(const void *dockPtr);
 void Driver_SetDockIcon(const char *path);
 void Driver_SetDockBadge(const char *str);
+void Driver_ShowContextMenu(const void *menuPtr);
 
 #endif /* driver_h */

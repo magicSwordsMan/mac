@@ -7,6 +7,7 @@ package mac
 import "C"
 import (
 	"strconv"
+	"time"
 	"unsafe"
 
 	"fmt"
@@ -34,8 +35,21 @@ func (m *AppMenu) Mount(c markup.Componer) {
 	C.Driver_SetAppMenu(m.ptr)
 }
 
-func (m *AppMenu) Close() {
-	log.Error("application menu can't be closed")
+type ContextMenu struct {
+	*Menu
+}
+
+func NewContextMenu() *ContextMenu {
+	m := &ContextMenu{
+		Menu: NewMenu(),
+	}
+
+	return m
+}
+
+func (m *ContextMenu) Mount(c markup.Componer) {
+	m.Menu.Mount(c)
+	C.Driver_ShowContextMenu(m.ptr)
 }
 
 type Menu struct {
@@ -67,6 +81,8 @@ func (m *Menu) ID() uid.ID {
 }
 
 func (m *Menu) Mount(c markup.Componer) {
+	ensureLaunched()
+
 	if m.component != nil {
 		C.Menu_Clear(m.ptr)
 		markup.Dismount(m.component)
@@ -199,6 +215,8 @@ func (m *Menu) associate(parent *markup.Element, child *markup.Element) {
 }
 
 func (m *Menu) Render(elem *markup.Element) {
+	ensureLaunched()
+
 	if err := m.mount(elem); err != nil {
 		log.Error(err)
 	}
@@ -225,11 +243,25 @@ func (m *Menu) SetBadge(v string) {
 }
 
 func (m *Menu) Close() {
-	C.Menu_Close(m.ptr)
-	app.UnregisterContext(m)
 }
 
 //export onMenuItemClick
 func onMenuItemClick(id *C.char, method *C.char) {
 	markup.Call(uid.ID(C.GoString(id)), C.GoString(method), "")
+}
+
+//export onMenuCloseFinal
+func onMenuCloseFinal(cid *C.char) {
+	ctx, err := app.ContextByID(uid.ID(C.GoString(cid)))
+	if err != nil {
+		return
+	}
+
+	menu := ctx.(*Menu)
+
+	go func() {
+		time.Sleep(time.Millisecond * 42)
+		markup.Dismount(menu.component)
+		app.UnregisterContext(menu)
+	}()
 }

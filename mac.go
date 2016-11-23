@@ -18,16 +18,24 @@ import (
 )
 
 var (
-	driver = NewDriver()
+	driver   = NewDriver()
+	launched = false
 )
 
 func init() {
 	app.RegisterDriver(driver)
 }
 
+func ensureLaunched() {
+	if !launched {
+		log.Panic(`app must be lauched to perform mount and/or render operations`)
+	}
+}
+
 //export onLaunch
 func onLaunch() {
 	if app.OnLaunch != nil {
+		launched = true
 		app.OnLaunch()
 	}
 }

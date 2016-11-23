@@ -14,6 +14,7 @@ void Menu_Mount(const void *ptr, const char *rootID) {
   MenuContainer *container =
       [menu.Elems objectForKey:[NSString stringWithUTF8String:rootID]];
   menu.Root = container;
+  container.delegate = menu;
 }
 
 void Menu_Dismount(const void *ptr) {
@@ -101,10 +102,13 @@ void Menu_Clear(const void *ptr) {
   menu.Elems = [NSMutableDictionary dictionary];
 }
 
-void Menu_Close(const void *ptr) { CFBridgingRelease(ptr); }
-
 @implementation MenuItem
 - (void)setSelector:(NSString *)selector {
+  if (!self.enabled) {
+    self.action = nil;
+    return;
+  }
+
   if (self.hasSubmenu) {
     self.action = @selector(submenuAction:);
     return;
@@ -210,5 +214,10 @@ void Menu_Close(const void *ptr) { CFBridgingRelease(ptr); }
       [self.Elems removeObjectForKey:item.ID];
     }
   }
+}
+
+- (void)menuDidClose:(NSMenu *)menu {
+  onMenuCloseFinal((char *)self.ID.UTF8String);
+  CFBridgingRelease((__bridge void *)self);
 }
 @end

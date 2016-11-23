@@ -93,3 +93,16 @@ void Driver_SetDockIcon(const char *path) {
 void Driver_SetDockBadge(const char *str) {
   [NSApp.dockTile setBadgeLabel:[NSString stringWithUTF8String:str]];
 }
+
+void Driver_ShowContextMenu(const void *menuPtr) {
+  Menu *menu = (__bridge Menu *)menuPtr;
+
+  if (NSApp.keyWindow == nil) {
+    return;
+  }
+
+  defer(NSPoint p = [NSApp.keyWindow mouseLocationOutsideOfEventStream];
+        [menu.Root popUpMenuPositioningItem:menu.Root.itemArray[0]
+                                 atLocation:p
+                                     inView:NSApp.keyWindow.contentView];);
+}

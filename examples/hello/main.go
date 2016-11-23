@@ -34,6 +34,7 @@ func (h *Hello) Render() string {
 		   _onkeyup="OnKeyUp"
 		   _onmousewheel="OnWheel"
 		   _onclick="OnClick"
+		   _oncontextmenu="OnContextMenu"
 		   value="{{html .Greeting}}"  
 		   autofocus="true" />
 </div>
@@ -57,8 +58,12 @@ func (h *Hello) OnClick(e app.MouseArg) {
 	log.Infof("%+v", e)
 }
 
-func main() {
+func (h *Hello) OnContextMenu() {
+	m := app.NewContextMenu()
+	m.Mount(&AppMainMenu{Sep: true})
+}
 
+func main() {
 	app.OnLaunch = func() {
 		menu := &AppMainMenu{Sep: true}
 		app.Menu().Mount(menu)
@@ -87,10 +92,17 @@ func main() {
 			time.Sleep(time.Second * 3)
 			menu.CustomTitle = "La vie est belle"
 			menu.Sep = false
+			menu.Disabled = true
 			app.Render(menu)
-			app.Dock().SetBadge("")
+			app.Dock().SetBadge("Tyler")
 			app.Dock().SetIcon(app.Resources().Join("dsffa.png"))
-			app.Dock().SetIcon("")
+
+			ctxm := app.NewContextMenu()
+			ctxm.Mount(&AppMainMenu{})
+
+			time.Sleep(time.Second * 3)
+			ctxm.Close()
+			// app.Dock().SetIcon("")
 
 			// for _, s := range name {
 			// 	time.Sleep(time.Millisecond * 15)
