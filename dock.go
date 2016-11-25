@@ -5,43 +5,59 @@ package mac
 */
 import "C"
 import (
+	"fmt"
+	"os"
 	"unsafe"
 
-	"os"
-
+	"github.com/murlokswarm/app"
 	"github.com/murlokswarm/log"
 	"github.com/murlokswarm/markup"
 )
 
-type Dock struct {
-	*Menu
+type dock struct {
+	*menu
 }
 
-func NewDock() *Dock {
-	return &Dock{
-		Menu: NewMenu(),
+func newDock() *dock {
+	return &dock{
+		menu: newMenu(),
 	}
 }
 
-func (d *Dock) Mount(c markup.Componer) {
-	d.Menu.Mount(c)
+func (d *dock) Mount(c markup.Componer) {
+	ensureLaunched()
+	d.menu.Mount(c)
 	C.Driver_SetDockMenu(d.ptr)
 }
 
-func (d *Dock) SetIcon(path string) {
-	if _, err := os.Stat(path); len(path) != 0 && err != nil {
-		log.Error(err)
-		return
-	}
+func (d *dock) SetIcon(path string) {
+	ensureLaunched()
 
 	cpath := C.CString(path)
 	defer free(unsafe.Pointer(cpath))
 
+	if len(path) == 0 {
+		C.Driver_SetDockIcon(cpath)
+		return
+	}
+
+	if !app.IsSupportedImageExtension(path) {
+		log.Errorf("extension of %v is not supported", path)
+		return
+	}
+
+	if _, err := os.Stat(path); err != nil {
+		log.Error(err)
+		return
+	}
+
 	C.Driver_SetDockIcon(cpath)
 }
 
-func (d *Dock) SetBadge(v string) {
-	cv := C.CString(v)
+func (d *dock) SetBadge(v interface{}) {
+	ensureLaunched()
+
+	cv := C.CString(fmt.Sprint(v))
 	defer free(unsafe.Pointer(cv))
 
 	C.Driver_SetDockBadge(cv)

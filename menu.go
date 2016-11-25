@@ -20,45 +20,47 @@ import (
 	"github.com/murlokswarm/uid"
 )
 
-type AppMenu struct {
-	*Menu
+type appMenu struct {
+	*menu
 }
 
-func NewAppMenu() *AppMenu {
-	return &AppMenu{
-		Menu: NewMenu(),
+func newAppMenu() *appMenu {
+	return &appMenu{
+		menu: newMenu(),
 	}
 }
 
-func (m *AppMenu) Mount(c markup.Componer) {
-	m.Menu.Mount(c)
+func (m *appMenu) Mount(c markup.Componer) {
+	ensureLaunched()
+
+	m.menu.Mount(c)
 	C.Driver_SetAppMenu(m.ptr)
 }
 
-type ContextMenu struct {
-	*Menu
+type contextMenu struct {
+	*menu
 }
 
-func NewContextMenu() *ContextMenu {
-	m := &ContextMenu{
-		Menu: NewMenu(),
+func newContextMenu() *contextMenu {
+	m := &contextMenu{
+		menu: newMenu(),
 	}
 
 	return m
 }
 
-func (m *ContextMenu) Mount(c markup.Componer) {
-	m.Menu.Mount(c)
+func (m *contextMenu) Mount(c markup.Componer) {
+	m.menu.Mount(c)
 	C.Driver_ShowContextMenu(m.ptr)
 }
 
-type Menu struct {
+type menu struct {
 	id        uid.ID
 	ptr       unsafe.Pointer
 	component markup.Componer
 }
 
-func NewMenu() *Menu {
+func newMenu() *menu {
 	id := uid.Context()
 
 	cmenu := C.Menu__{
@@ -67,7 +69,7 @@ func NewMenu() *Menu {
 
 	defer free(unsafe.Pointer(cmenu.ID))
 
-	menu := &Menu{
+	menu := &menu{
 		id:  id,
 		ptr: C.Menu_New(cmenu),
 	}
@@ -76,13 +78,11 @@ func NewMenu() *Menu {
 	return menu
 }
 
-func (m *Menu) ID() uid.ID {
+func (m *menu) ID() uid.ID {
 	return m.id
 }
 
-func (m *Menu) Mount(c markup.Componer) {
-	ensureLaunched()
-
+func (m *menu) Mount(c markup.Componer) {
 	if m.component != nil {
 		C.Menu_Clear(m.ptr)
 		markup.Dismount(m.component)
@@ -106,7 +106,7 @@ func (m *Menu) Mount(c markup.Componer) {
 	C.Menu_Mount(m.ptr, rootID)
 }
 
-func (m *Menu) mount(elem *markup.Element) (err error) {
+func (m *menu) mount(elem *markup.Element) (err error) {
 	switch elem.Name {
 	case "menu":
 		if err = m.mountContainer(elem); err != nil {
@@ -137,7 +137,7 @@ func (m *Menu) mount(elem *markup.Element) (err error) {
 	return
 }
 
-func (m *Menu) mountContainer(elem *markup.Element) error {
+func (m *menu) mountContainer(elem *markup.Element) error {
 	if elem.Parent != nil && elem.Parent.Name != "menu" {
 		return fmt.Errorf("%v can only have another menu as parent: %v", elem, elem.Parent)
 	}
@@ -156,7 +156,7 @@ func (m *Menu) mountContainer(elem *markup.Element) error {
 	return nil
 }
 
-func (m *Menu) mountItem(elem *markup.Element) (err error) {
+func (m *menu) mountItem(elem *markup.Element) (err error) {
 	var iconPath string
 
 	if elem.Parent == nil || elem.Parent.Name != "menu" {
@@ -176,6 +176,11 @@ func (m *Menu) mountItem(elem *markup.Element) (err error) {
 
 	if len(icon.Value) != 0 {
 		iconPath = app.Resources().Join(icon.Value)
+
+		if !app.IsSupportedImageExtension(iconPath) {
+			err = fmt.Errorf("extension of %v is not supported", iconPath)
+			return
+		}
 
 		if _, err = os.Stat(iconPath); err != nil {
 			return
@@ -204,7 +209,7 @@ func (m *Menu) mountItem(elem *markup.Element) (err error) {
 	return
 }
 
-func (m *Menu) associate(parent *markup.Element, child *markup.Element) {
+func (m *menu) associate(parent *markup.Element, child *markup.Element) {
 	parentID := C.CString(parent.ID.String())
 	childID := C.CString(child.ID.String())
 
@@ -214,40 +219,40 @@ func (m *Menu) associate(parent *markup.Element, child *markup.Element) {
 	C.Menu_Associate(m.ptr, parentID, childID)
 }
 
-func (m *Menu) Render(elem *markup.Element) {
-	ensureLaunched()
-
+func (m *menu) Render(elem *markup.Element) {
 	if err := m.mount(elem); err != nil {
 		log.Error(err)
 	}
 }
 
-func (m *Menu) Position() (x float64, y float64) {
+func (m *menu) Position() (x float64, y float64) {
 	return
 }
 
-func (m *Menu) Move(x float64, y float64) {
+func (m *menu) Move(x float64, y float64) {
 }
 
-func (m *Menu) Size() (width float64, height float64) {
+func (m *menu) Size() (width float64, height float64) {
 	return
 }
 
-func (m *Menu) Resize(width float64, height float64) {
+func (m *menu) Resize(width float64, height float64) {
 }
 
-func (m *Menu) SetIcon(path string) {
+func (m *menu) SetIcon(path string) {
 }
 
-func (m *Menu) SetBadge(v string) {
+func (m *menu) SetBadge(v interface{}) {
 }
 
-func (m *Menu) Close() {
+func (m *menu) Close() {
 }
 
 //export onMenuItemClick
 func onMenuItemClick(id *C.char, method *C.char) {
-	markup.Call(uid.ID(C.GoString(id)), C.GoString(method), "")
+	if err := markup.Call(uid.ID(C.GoString(id)), C.GoString(method), ""); err != nil {
+		log.Error(err)
+	}
 }
 
 //export onMenuCloseFinal
@@ -257,7 +262,7 @@ func onMenuCloseFinal(cid *C.char) {
 		return
 	}
 
-	menu := ctx.(*Menu)
+	menu := ctx.(*menu)
 
 	go func() {
 		time.Sleep(time.Millisecond * 42)

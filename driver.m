@@ -1,6 +1,5 @@
 #include "driver.h"
 #include "_cgo_export.h"
-#include "mac.h"
 #include "menu.h"
 
 @implementation DriverDelegate

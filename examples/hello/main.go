@@ -94,7 +94,7 @@ func main() {
 			menu.Sep = false
 			menu.Disabled = true
 			app.Render(menu)
-			app.Dock().SetBadge("Tyler")
+			app.Dock().SetBadge("Hello Ach")
 			app.Dock().SetIcon(app.Resources().Join("dsffa.png"))
 
 			ctxm := app.NewContextMenu()

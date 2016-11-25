@@ -15,15 +15,14 @@ import (
 	"github.com/murlokswarm/uid"
 )
 
-type Window struct {
+type window struct {
 	id        uid.ID
 	ptr       unsafe.Pointer
 	component markup.Componer
 	config    app.Window
 }
 
-// NewWindow creates a window.
-func NewWindow(w app.Window) *Window {
+func newWindow(w app.Window) *window {
 	id := uid.Context()
 
 	htmlCtx := app.HTMLContext{
@@ -59,7 +58,7 @@ func NewWindow(w app.Window) *Window {
 	defer free(unsafe.Pointer(cwin.HTML))
 	defer free(unsafe.Pointer(cwin.ResourcePath))
 
-	win := &Window{
+	win := &window{
 		id:     id,
 		ptr:    C.Window_New(cwin),
 		config: w,
@@ -69,17 +68,13 @@ func NewWindow(w app.Window) *Window {
 	return win
 }
 
-// ID the identifier of the window.
-func (w *Window) ID() uid.ID {
+func (w *window) ID() uid.ID {
 	return w.id
 }
 
-// Mount mounts a component.
-func (w *Window) Mount(c markup.Componer) {
+func (w *window) Mount(c markup.Componer) {
 	var html string
 	var err error
-
-	ensureLaunched()
 
 	if w.component != nil {
 		markup.Dismount(w.component)
@@ -104,9 +99,7 @@ func (w *Window) Mount(c markup.Componer) {
 	C.Window_CallJS(w.ptr, ccall)
 }
 
-func (w *Window) Render(elem *markup.Element) {
-	ensureLaunched()
-
+func (w *window) Render(elem *markup.Element) {
 	html := strconv.Quote(elem.HTML())
 	call := fmt.Sprintf(`Render("%v", %v)`, elem.ID, html)
 
@@ -116,37 +109,37 @@ func (w *Window) Render(elem *markup.Element) {
 	C.Window_CallJS(w.ptr, ccall)
 }
 
-func (w *Window) Position() (x float64, y float64) {
+func (w *window) Position() (x float64, y float64) {
 	frame := C.Window_Frame(w.ptr)
 	x = float64(frame.origin.x)
 	y = float64(frame.origin.y)
 	return
 }
 
-func (w *Window) Move(x float64, y float64) {
+func (w *window) Move(x float64, y float64) {
 	C.Window_Move(w.ptr, C.CGFloat(x), C.CGFloat(y))
 }
 
-func (w *Window) Size() (width float64, height float64) {
+func (w *window) Size() (width float64, height float64) {
 	frame := C.Window_Frame(w.ptr)
 	width = float64(frame.size.width)
 	height = float64(frame.size.height)
 	return
 }
 
-func (w *Window) Resize(width float64, height float64) {
+func (w *window) Resize(width float64, height float64) {
 	C.Window_Resize(w.ptr, C.CGFloat(width), C.CGFloat(height))
 }
 
-func (w *Window) SetIcon(path string) {
+func (w *window) SetIcon(path string) {
 	return
 }
 
-func (w *Window) SetBadge(v string) {
+func (w *window) SetBadge(v interface{}) {
 	return
 }
 
-func (w *Window) Close() {
+func (w *window) Close() {
 	C.Window_Close(w.ptr)
 }
 
@@ -157,7 +150,7 @@ func onWindowMinimize(cid *C.char) {
 		return
 	}
 
-	win := ctx.(*Window)
+	win := ctx.(*window)
 
 	if win.config.OnMinimize != nil {
 		win.config.OnMinimize()
@@ -171,7 +164,7 @@ func onWindowDeminimize(cid *C.char) {
 		return
 	}
 
-	win := ctx.(*Window)
+	win := ctx.(*window)
 
 	if win.config.OnDeminimize != nil {
 		win.config.OnDeminimize()
@@ -185,7 +178,7 @@ func onWindowFullScreen(cid *C.char) {
 		return
 	}
 
-	win := ctx.(*Window)
+	win := ctx.(*window)
 
 	if win.config.OnFullScreen != nil {
 		win.config.OnFullScreen()
@@ -199,7 +192,7 @@ func onWindowExitFullScreen(cid *C.char) {
 		return
 	}
 
-	win := ctx.(*Window)
+	win := ctx.(*window)
 
 	if win.config.OnExitFullScreen != nil {
 		win.config.OnExitFullScreen()
@@ -213,7 +206,7 @@ func onWindowMove(cid *C.char, x C.CGFloat, y C.CGFloat) {
 		return
 	}
 
-	win := ctx.(*Window)
+	win := ctx.(*window)
 
 	if win.config.OnMove != nil {
 		win.config.OnMove(float64(x), float64(y))
@@ -227,7 +220,7 @@ func onWindowResize(cid *C.char, width C.CGFloat, height C.CGFloat) {
 		return
 	}
 
-	win := ctx.(*Window)
+	win := ctx.(*window)
 
 	if win.config.OnResize != nil {
 		win.config.OnResize(float64(width), float64(height))
@@ -241,7 +234,7 @@ func onWindowFocus(cid *C.char) {
 		return
 	}
 
-	win := ctx.(*Window)
+	win := ctx.(*window)
 
 	if win.config.OnFocus != nil {
 		win.config.OnFocus()
@@ -255,7 +248,7 @@ func onWindowBlur(cid *C.char) {
 		return
 	}
 
-	win := ctx.(*Window)
+	win := ctx.(*window)
 
 	if win.config.OnBlur != nil {
 		win.config.OnBlur()
@@ -269,7 +262,7 @@ func onWindowClose(cid *C.char) bool {
 		return true
 	}
 
-	win := ctx.(*Window)
+	win := ctx.(*window)
 
 	if win.config.OnClose != nil {
 		return win.config.OnClose()
@@ -285,7 +278,7 @@ func onWindowCloseFinal(cid *C.char) {
 		return
 	}
 
-	win := ctx.(*Window)
+	win := ctx.(*window)
 	markup.Dismount(win.component)
 	app.UnregisterContext(win)
 }

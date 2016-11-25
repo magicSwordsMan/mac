@@ -1,7 +1,6 @@
 #include "window.h"
 #include "_cgo_export.h"
 #include "color.h"
-#include "mac.h"
 
 const void *Window_New(Window__ w) {
   NSRect contentRect = NSMakeRect(w.X, w.Y, w.Width, w.Height);

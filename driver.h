@@ -3,6 +3,10 @@
 
 #import <Cocoa/Cocoa.h>
 
+#define defer(code)                                                            \
+  dispatch_async(dispatch_get_main_queue(), ^{                                 \
+                     code})
+
 @interface DriverDelegate : NSObject <NSApplicationDelegate>
 @property NSMenu *dock;
 

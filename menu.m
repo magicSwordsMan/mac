@@ -1,6 +1,5 @@
 #include "menu.h"
 #include "_cgo_export.h"
-#include "mac.h"
 
 const void *Menu_New(Menu__ m) {
   Menu *menu = [[Menu alloc] init];
