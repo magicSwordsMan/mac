@@ -1,13 +1,13 @@
 package main
 
 import (
+	"github.com/murlokswarm/app"
 	"github.com/murlokswarm/log"
-	"github.com/murlokswarm/markup"
 )
 
 func init() {
-	markup.RegisterComponent("AppMainMenu", func() markup.Componer { return &AppMainMenu{} })
-	markup.RegisterComponent("WindowMenu", func() markup.Componer { return &WindowMenu{} })
+	app.RegisterComponent(&AppMainMenu{})
+	app.RegisterComponent(&WindowMenu{})
 }
 
 type AppMainMenu struct {

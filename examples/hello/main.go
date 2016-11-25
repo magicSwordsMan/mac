@@ -6,7 +6,6 @@ import (
 	"github.com/murlokswarm/app"
 	"github.com/murlokswarm/log"
 	_ "github.com/murlokswarm/mac"
-	"github.com/murlokswarm/markup"
 )
 
 var (
@@ -14,9 +13,7 @@ var (
 )
 
 func init() {
-	markup.RegisterComponent("Hello", func() markup.Componer {
-		return &Hello{}
-	})
+	app.RegisterComponent(&Hello{})
 }
 
 type Hello struct {

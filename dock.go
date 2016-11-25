@@ -11,7 +11,6 @@ import (
 
 	"github.com/murlokswarm/app"
 	"github.com/murlokswarm/log"
-	"github.com/murlokswarm/markup"
 )
 
 type dock struct {
@@ -24,7 +23,7 @@ func newDock() *dock {
 	}
 }
 
-func (d *dock) Mount(c markup.Componer) {
+func (d *dock) Mount(c app.Componer) {
 	ensureLaunched()
 	d.menu.Mount(c)
 	C.Driver_SetDockMenu(d.ptr)

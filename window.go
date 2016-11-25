@@ -18,7 +18,7 @@ import (
 type window struct {
 	id        uid.ID
 	ptr       unsafe.Pointer
-	component markup.Componer
+	component app.Componer
 	config    app.Window
 }
 
@@ -72,7 +72,7 @@ func (w *window) ID() uid.ID {
 	return w.id
 }
 
-func (w *window) Mount(c markup.Componer) {
+func (w *window) Mount(c app.Componer) {
 	var html string
 	var err error
 

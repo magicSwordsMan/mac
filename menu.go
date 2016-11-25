@@ -30,7 +30,7 @@ func newAppMenu() *appMenu {
 	}
 }
 
-func (m *appMenu) Mount(c markup.Componer) {
+func (m *appMenu) Mount(c app.Componer) {
 	ensureLaunched()
 
 	m.menu.Mount(c)
@@ -49,7 +49,7 @@ func newContextMenu() *contextMenu {
 	return m
 }
 
-func (m *contextMenu) Mount(c markup.Componer) {
+func (m *contextMenu) Mount(c app.Componer) {
 	m.menu.Mount(c)
 	C.Driver_ShowContextMenu(m.ptr)
 }
@@ -57,7 +57,7 @@ func (m *contextMenu) Mount(c markup.Componer) {
 type menu struct {
 	id        uid.ID
 	ptr       unsafe.Pointer
-	component markup.Componer
+	component app.Componer
 }
 
 func newMenu() *menu {
@@ -82,7 +82,7 @@ func (m *menu) ID() uid.ID {
 	return m.id
 }
 
-func (m *menu) Mount(c markup.Componer) {
+func (m *menu) Mount(c app.Componer) {
 	if m.component != nil {
 		C.Menu_Clear(m.ptr)
 		markup.Dismount(m.component)
