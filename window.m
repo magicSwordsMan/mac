@@ -30,10 +30,6 @@ const void *Window_New(Window__ w) {
                                                 backing:NSBackingStoreBuffered
                                                   defer:NO];
 
-  if (w.TitlebarHidden) {
-    win.titlebarAppearsTransparent = true;
-  }
-
   // Background.
   if (w.Vibrancy != NSVisualEffectMaterialAppearanceBased) {
     NSVisualEffectView *visualEffectView =
@@ -73,8 +69,11 @@ const void *Window_New(Window__ w) {
 
   // Titlebar.
   if (w.TitlebarHidden) {
+    win.titlebarAppearsTransparent = true;
     TitleBar *titleBar = [[TitleBar alloc] init];
     Window_SetTitleBar(win, titleBar);
+  } else {
+    win.title = [NSString stringWithUTF8String:w.Title];
   }
 
   [win.windowController showWindow:nil];

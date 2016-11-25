@@ -1,6 +1,8 @@
 package main
 
 import (
+	"time"
+
 	"github.com/murlokswarm/app"
 	"github.com/murlokswarm/log"
 	_ "github.com/murlokswarm/mac"
@@ -32,6 +34,7 @@ func (h *Hello) Render() string {
 		   _onkeyup="OnKeyUp"
 		   _onmousewheel="OnWheel"
 		   _onclick="OnClick"
+		   _oncontextmenu="OnContextMenu"
 		   value="{{html .Greeting}}"  
 		   autofocus="true" />
 </div>
@@ -55,43 +58,69 @@ func (h *Hello) OnClick(e app.MouseArg) {
 	log.Infof("%+v", e)
 }
 
+func (h *Hello) OnContextMenu() {
+	m := app.NewContextMenu()
+	m.Mount(&AppMainMenu{Sep: true})
+}
+
 func main() {
 	app.OnLaunch = func() {
+		menu := &AppMainMenu{Sep: true}
+		app.Menu().Mount(menu)
+
+		dock := &AppMainMenu{}
+		app.Dock().Mount(dock)
+		app.Dock().SetBadge("42")
+		app.Dock().SetIcon(app.Resources().Join("contexticon.png"))
+
 		win = newWindow()
 
 		hello := &Hello{}
 		win.Mount(hello)
 
-		// go func() {
-		// name := []string{
-		// 	"m",
-		// 	"ma",
-		// 	"max",
-		// 	"maxe",
-		// 	"maxen",
-		// 	"maxenc",
-		// 	"maxence",
-		// }
+		go func() {
+			// name := []string{
+			// 	"m",
+			// 	"ma",
+			// 	"max",
+			// 	"maxe",
+			// 	"maxen",
+			// 	"maxenc",
+			// 	"maxence",
+			// }
 
-		// time.Sleep(time.Second)
+			time.Sleep(time.Second * 3)
+			menu.CustomTitle = "La vie est belle"
+			menu.Sep = false
+			menu.Disabled = true
+			app.Render(menu)
+			app.Dock().SetBadge("Hello Ach")
+			app.Dock().SetIcon(app.Resources().Join("dsffa.png"))
 
-		// for _, s := range name {
-		// 	time.Sleep(time.Millisecond * 15)
-		// 	hello.Greeting = s
-		// 	app.Render(hello)
-		// }
+			ctxm := app.NewContextMenu()
+			ctxm.Mount(&AppMainMenu{})
 
-		// win.Move(300, 300)
-		// win.Resize(42, 42)
-		// w, h := win.Size()
-		// log.Infof("win size: %vx%v", w, h)
+			time.Sleep(time.Second * 3)
+			ctxm.Close()
+			// app.Dock().SetIcon("")
 
-		// x, y := win.Position()
-		// log.Infof("win pos: (%v, %v)", x, y)
+			// for _, s := range name {
+			// 	time.Sleep(time.Millisecond * 15)
+			// 	hello.Greeting = s
+			// 	app.Render(hello)
+			// }
 
-		// win.Close()
+			// win.Move(300, 300)
+			// win.Resize(42, 42)
+			// w, h := win.Size()
+			// log.Infof("win size: %vx%v", w, h)
 
-		// }()
+			// x, y := win.Position()
+			// log.Infof("win pos: (%v, %v)", x, y)
+
+			// win.Close()
+
+		}()
 	}
 
 	app.OnReopen = func(hasVisibleWindow bool) {
@@ -109,11 +138,11 @@ func main() {
 
 func newWindow() app.Contexter {
 	return app.NewWindow(app.Window{
-		Width:          1340,
-		Height:         720,
-		Vibrancy:       app.VibeMediumLight,
-		TitlebarHidden: true,
-		Title:          "main",
+		Width:    1340,
+		Height:   720,
+		Vibrancy: app.VibeDark,
+		// TitlebarHidden: true,
+		Title: "main",
 
 		OnMinimize:       func() { log.Info("OnMinimize") },
 		OnDeminimize:     func() { log.Info("OnDeminimize") },
