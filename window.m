@@ -40,15 +40,14 @@ const void *Window_New(Window__ w) {
     visualEffectView.state = NSVisualEffectStateActive;
     win.contentView = visualEffectView;
   } else {
-    CIColor *backgroundColor = [CIColor colorWithHexString:@"#414244"];
     NSString *bacgroundColorString =
         [NSString stringWithUTF8String:w.BackgroundColor];
 
     if (bacgroundColorString.length != 0) {
-      backgroundColor = [CIColor colorWithHexString:bacgroundColorString];
+      CIColor *backgroundColor =
+          [CIColor colorWithHexString:bacgroundColorString];
+      win.backgroundColor = [NSColor colorWithCIColor:backgroundColor];
     }
-
-    win.backgroundColor = [NSColor colorWithCIColor:backgroundColor];
   }
 
   // Window controller.

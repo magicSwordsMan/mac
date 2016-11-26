@@ -67,7 +67,7 @@ func main() {
 
 		dock := &AppMainMenu{}
 		app.Dock().Mount(dock)
-		app.Dock().SetBadge("42")
+		app.Dock().SetBadge(42)
 		app.Dock().SetIcon(app.Resources().Join("contexticon.png"))
 
 		win = newWindow()
@@ -86,13 +86,13 @@ func main() {
 			// 	"maxence",
 			// }
 
-			time.Sleep(time.Second * 3)
-			menu.CustomTitle = "La vie est belle"
-			menu.Sep = false
-			menu.Disabled = true
+			// time.Sleep(time.Second * 3)
+			// menu.CustomTitle = "La vie est belle"
+			// menu.Sep = false
+			// menu.Disabled = true
 			app.Render(menu)
-			app.Dock().SetBadge("Hello Ach")
-			app.Dock().SetIcon(app.Resources().Join("dsffa.png"))
+			// app.Dock().SetBadge("Hello Ach")
+			// app.Dock().SetIcon(app.Resources().Join("dsffa.png"))
 
 			ctxm := app.NewContextMenu()
 			ctxm.Mount(&AppMainMenu{})
