@@ -72,8 +72,8 @@ func main() {
 
 		win = newWindow()
 
-		hello := &Hello{}
-		win.Mount(hello)
+		// hello := &Hello{}
+		// win.Mount(hello)
 
 		go func() {
 			// name := []string{
@@ -126,8 +126,8 @@ func main() {
 		}
 
 		win = newWindow()
-		hello := &Hello{}
-		win.Mount(hello)
+		// hello := &Hello{}
+		// win.Mount(hello)
 	}
 
 	app.Run()
@@ -138,8 +138,9 @@ func newWindow() app.Contexter {
 		Width:    1340,
 		Height:   720,
 		Vibrancy: app.VibeDark,
-		// TitlebarHidden: true,
-		Title: "main",
+		// BackgroundColor: "00FF00ff",
+		TitlebarHidden: true,
+		Title:          "main",
 
 		OnMinimize:       func() { log.Info("OnMinimize") },
 		OnDeminimize:     func() { log.Info("OnDeminimize") },
