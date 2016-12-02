@@ -267,7 +267,6 @@ func onWindowClose(cid *C.char) bool {
 	if win.config.OnClose != nil {
 		return win.config.OnClose()
 	}
-
 	return true
 }
 

@@ -32,7 +32,6 @@ func newAppMenu() *appMenu {
 
 func (m *appMenu) Mount(c app.Componer) {
 	ensureLaunched()
-
 	m.menu.Mount(c)
 	C.Driver_SetAppMenu(m.ptr)
 }
@@ -45,7 +44,6 @@ func newContextMenu() *contextMenu {
 	m := &contextMenu{
 		menu: newMenu(),
 	}
-
 	return m
 }
 
@@ -123,7 +121,7 @@ func (m *menu) mount(elem *markup.Element) (err error) {
 	}
 
 	for _, child := range elem.Children {
-		if markup.IsComponentName(child.Name) {
+		if child.Type == markup.Component {
 			child, _ = markup.ComponentRoot(child.Component)
 		}
 
@@ -133,7 +131,6 @@ func (m *menu) mount(elem *markup.Element) (err error) {
 
 		m.associate(elem, child)
 	}
-
 	return
 }
 

@@ -118,7 +118,6 @@ func isAppPackaged() (packaged bool) {
 			return true
 		}
 	}
-
 	return
 }
 
@@ -169,7 +168,6 @@ func onTerminate() bool {
 	if app.OnTerminate != nil {
 		return app.OnTerminate()
 	}
-
 	return true
 }
 
