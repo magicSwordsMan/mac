@@ -49,7 +49,6 @@
 const void *Driver_Init() {
   [NSApplication sharedApplication];
   [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
-  [NSApp activateIgnoringOtherApps:YES];
 
   DriverDelegate *delegate = [[DriverDelegate alloc] init];
   NSApp.delegate = delegate;
@@ -69,7 +68,7 @@ const char *Driver_Resources() {
 void Driver_SetAppMenu(const void *menuPtr) {
   Menu *menu = (__bridge Menu *)menuPtr;
 
-  defer(NSApp.mainMenu = menu.Root;);
+  defer(NSApp.mainMenu = menu.Root; [NSApp activateIgnoringOtherApps:YES];);
 }
 
 void Driver_SetDockMenu(const void *dockPtr) {
