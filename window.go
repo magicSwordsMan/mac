@@ -131,14 +131,6 @@ func (w *window) Resize(width float64, height float64) {
 	C.Window_Resize(w.ptr, C.CGFloat(width), C.CGFloat(height))
 }
 
-func (w *window) SetIcon(path string) {
-	return
-}
-
-func (w *window) SetBadge(v interface{}) {
-	return
-}
-
 func (w *window) Close() {
 	C.Window_Close(w.ptr)
 }

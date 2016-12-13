@@ -38,7 +38,7 @@ type Driver struct {
 	ptr       unsafe.Pointer
 	resources app.ResourcePath
 	appMenu   app.Contexter
-	dock      app.Contexter
+	dock      app.Docker
 }
 
 // NewDriver creates a new MacOS driver.
@@ -85,7 +85,7 @@ func (d *Driver) AppMenu() app.Contexter {
 }
 
 // Dock returns the dock.
-func (d *Driver) Dock() app.Contexter {
+func (d *Driver) Dock() app.Docker {
 	return d.dock
 }
 

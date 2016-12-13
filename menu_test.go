@@ -90,15 +90,7 @@ func TestContextMenu(t *testing.T) {
 }
 
 func TestMenu(t *testing.T) {
-	m := newMenu()
-	defer m.Close()
-
-	m.Position()
-	m.Move(42, 42)
-	m.Size()
-	m.Resize(42, 42)
-	m.SetIcon("")
-	m.SetBadge(42)
+	newMenu()
 }
 
 func TestMenuMount(t *testing.T) {

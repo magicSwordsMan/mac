@@ -222,29 +222,6 @@ func (m *menu) Render(elem *markup.Element) {
 	}
 }
 
-func (m *menu) Position() (x float64, y float64) {
-	return
-}
-
-func (m *menu) Move(x float64, y float64) {
-}
-
-func (m *menu) Size() (width float64, height float64) {
-	return
-}
-
-func (m *menu) Resize(width float64, height float64) {
-}
-
-func (m *menu) SetIcon(path string) {
-}
-
-func (m *menu) SetBadge(v interface{}) {
-}
-
-func (m *menu) Close() {
-}
-
 //export onMenuItemClick
 func onMenuItemClick(id *C.char, method *C.char) {
 	if err := markup.Call(uid.ID(C.GoString(id)), C.GoString(method), ""); err != nil {
