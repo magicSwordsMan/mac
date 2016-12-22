@@ -107,7 +107,3 @@ func TestOnFinalize(t *testing.T) {
 
 	onFinalize()
 }
-
-func TestOnEvent(t *testing.T) {
-	onEvent(cString("elem-1"), cString("Clicked"), cString("{}"))
-}

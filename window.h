@@ -35,12 +35,13 @@ typedef struct Window__ {
 @interface TitleBar : NSView
 @end
 
-const void *Window_New(Window__ w);
+void Window_New(Window__ w);
+void Window_new(Window__ w);
 WKWebView *Window_NewWebview(WindowController *controller, NSString *HTML,
                              NSString *resourcePath);
 void Window_SetWebview(NSWindow *win, WKWebView *webview);
 void Window_SetTitleBar(NSWindow *win, TitleBar *titleBar);
-void Window_Mount(const void *ptr, const char *markup);
+void Window_Show(const void *ptr);
 void Window_CallJS(const void *ptr, const char *js);
 NSRect Window_Frame(const void *ptr);
 void Window_Move(const void *ptr, CGFloat x, CGFloat y);

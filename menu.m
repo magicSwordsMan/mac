@@ -4,101 +4,103 @@
 const void *Menu_New(Menu__ m) {
   Menu *menu = [[Menu alloc] init];
   menu.ID = [NSString stringWithUTF8String:m.ID];
-
   return CFBridgingRetain(menu);
 }
 
 void Menu_Mount(const void *ptr, const char *rootID) {
   Menu *menu = (__bridge Menu *)ptr;
-  MenuContainer *container =
-      [menu.Elems objectForKey:[NSString stringWithUTF8String:rootID]];
-  menu.Root = container;
-  container.delegate = menu;
+  NSString *rootId = [NSString stringWithUTF8String:rootID];
+
+  defer(MenuContainer *container = [menu.Elems objectForKey:rootId];
+        menu.Root = container; container.delegate = menu;);
+}
+
+void Menu_Show(const void *ptr) {
+  Menu *menu = (__bridge Menu *)ptr;
+
+  defer(NSPoint p = [NSApp.keyWindow mouseLocationOutsideOfEventStream];
+        [menu.Root popUpMenuPositioningItem:menu.Root.itemArray[0]
+                                 atLocation:p
+                                     inView:NSApp.keyWindow.contentView];);
 }
 
 void Menu_Dismount(const void *ptr) {
   Menu *menu = (__bridge Menu *)ptr;
-  [menu dismountElement:menu.Root];
+  defer([menu dismountElement:menu.Root];);
 }
 
 void Menu_MountContainer(const void *ptr, MenuContainer__ c) {
   Menu *menu = (__bridge Menu *)ptr;
   NSString *containerID = [NSString stringWithUTF8String:c.ID];
+  NSString *label = [NSString stringWithUTF8String:c.Label];
 
-  MenuContainer *container = [menu.Elems objectForKey:containerID];
-  if (container == nil) {
-    container = [[MenuContainer alloc]
-        initWithTitle:[NSString stringWithUTF8String:c.Label]];
-    container.ID = containerID;
-    [menu.Elems setObject:container forKey:containerID];
-    return;
-  }
+  defer(MenuContainer *container = [menu.Elems objectForKey:containerID];
+        if (container == nil) {
+          container = [[MenuContainer alloc] initWithTitle:label];
+          container.ID = containerID;
+          [menu.Elems setObject:container forKey:containerID];
+          return;
+        }
 
-  for (int i = 0; i < container.numberOfItems; i++) {
-    [menu dismountElement:container.itemArray[i]];
-  }
+        for (int i = 0; i < container.numberOfItems;
+             i++) { [menu dismountElement:container.itemArray[i]]; }
 
-  defer([container removeAllItems];);
+            [container removeAllItems];);
 }
 
 void Menu_MountItem(const void *ptr, MenuItem__ it) {
   Menu *menu = (__bridge Menu *)ptr;
   NSString *itemID = [NSString stringWithUTF8String:it.ID];
+  NSString *label = [NSString stringWithUTF8String:it.Label];
+  NSString *onClick = [NSString stringWithUTF8String:it.OnClick];
+  NSString *icon = [NSString stringWithUTF8String:it.Icon];
+  NSString *selector = [NSString stringWithUTF8String:it.Selector];
+  NSString *shortcut = [NSString stringWithUTF8String:it.Shortcut];
 
-  MenuItem *item = [menu.Elems objectForKey:itemID];
-  if (item == nil) {
-
+  defer(MenuItem *item = [menu.Elems objectForKey:itemID]; if (item == nil) {
     item = [[MenuItem alloc] init];
     item.ID = itemID;
-
     [menu.Elems setObject:item forKey:itemID];
-  }
+  } item.title = label;
+        item.OnClick = onClick; item.enabled = !it.Disabled;
+        item.IsSeparator = it.Separator;
 
-  item.title = [NSString stringWithUTF8String:it.Label];
-  item.OnClick = [NSString stringWithUTF8String:it.OnClick];
-  item.enabled = !it.Disabled;
-  item.IsSeparator = it.Separator;
+        if (icon.length != 0) {
+          item.image = [[NSImage alloc] initByReferencingFile:icon];
+        } else { item.image = nil; }
 
-  NSString *icon = [NSString stringWithUTF8String:it.Icon];
-  if (icon.length != 0) {
-    item.image = [[NSImage alloc] initByReferencingFile:icon];
-  } else {
-    item.image = nil;
-  }
-
-  [item setSelector:[NSString stringWithUTF8String:it.Selector]];
-  [item setShortcut:[NSString stringWithUTF8String:it.Shortcut]];
-  [item setSeparator];
+        [item setSelector:selector];
+        [item setShortcut:shortcut];[item setSeparator];);
 }
 
 void Menu_Associate(const void *ptr, const char *parentID,
                     const char *childID) {
   Menu *menu = (__bridge Menu *)ptr;
-  MenuContainer *parent =
-      [menu.Elems objectForKey:[NSString stringWithUTF8String:parentID]];
-  id child = [menu.Elems objectForKey:[NSString stringWithUTF8String:childID]];
+  NSString *parentId = [NSString stringWithUTF8String:parentID];
+  NSString *childId = [NSString stringWithUTF8String:childID];
 
-  //  child is a MenuItem.
-  if ([child isKindOfClass:[MenuItem class]]) {
-    MenuItem *c = (MenuItem *)child;
+  defer(MenuContainer *parent = [menu.Elems objectForKey:parentId];
+        id child = [menu.Elems objectForKey:childId];
 
-    defer([parent addItem:c];[c setSeparator];);
-    return;
-  }
+        //  child is a MenuItem.
+        if ([child isKindOfClass:[MenuItem class]]) {
+          MenuItem *c = (MenuItem *)child;
 
-  //  child is a MenuContainer.
-  MenuContainer *container = (MenuContainer *)child;
-  MenuItem *item = [[MenuItem alloc] init];
-  item.title = container.title;
-  item.submenu = container;
-  defer([parent addItem:item];);
+          [parent addItem:c];
+          [c setSeparator];
+          return;
+        }
+
+        //  child is a MenuContainer.
+        MenuContainer *container = (MenuContainer *)child;
+        MenuItem *item = [[MenuItem alloc] init]; item.title = container.title;
+        item.submenu = container; [parent addItem:item];);
 }
 
 void Menu_Clear(const void *ptr) {
   Menu *menu = (__bridge Menu *)ptr;
 
-  menu.Root = nil;
-  menu.Elems = [NSMutableDictionary dictionary];
+  defer(menu.Root = nil; menu.Elems = [NSMutableDictionary dictionary];);
 }
 
 @implementation MenuItem

@@ -7,11 +7,19 @@ import (
 )
 
 //export onJSCall
-func onJSCall(msg *C.char) {
-	app.CallComponentMethod(C.GoString(msg))
+func onJSCall(cmsg *C.char) {
+	msg := C.GoString(cmsg)
+
+	app.UIChan <- func() {
+		app.CallComponentMethod(msg)
+	}
 }
 
 //export onJSAlert
-func onJSAlert(alert *C.char) {
-	log.Warn(C.GoString(alert))
+func onJSAlert(calert *C.char) {
+	alert := C.GoString(calert)
+
+	app.UIChan <- func() {
+		log.Warn(alert)
+	}
 }

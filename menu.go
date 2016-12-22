@@ -20,36 +20,36 @@ import (
 	"github.com/murlokswarm/uid"
 )
 
-type appMenu struct {
+type menuBar struct {
 	*menu
 }
 
-func newAppMenu() *appMenu {
-	return &appMenu{
-		menu: newMenu(),
+func newMenuBar() *menuBar {
+	return &menuBar{
+		menu: newMenu(app.Menu{}),
 	}
 }
 
-func (m *appMenu) Mount(c app.Componer) {
+func (m *menuBar) Mount(c app.Componer) {
 	ensureLaunched()
 	m.menu.Mount(c)
-	C.Driver_SetAppMenu(m.ptr)
+	C.Driver_SetMenuBar(m.ptr)
 }
 
 type contextMenu struct {
 	*menu
 }
 
-func newContextMenu() *contextMenu {
-	m := &contextMenu{
-		menu: newMenu(),
+func newContextMenu(m app.ContextMenu) *contextMenu {
+	cm := &contextMenu{
+		menu: newMenu(app.Menu(m)),
 	}
-	return m
+	return cm
 }
 
 func (m *contextMenu) Mount(c app.Componer) {
 	m.menu.Mount(c)
-	C.Driver_ShowContextMenu(m.ptr)
+	C.Menu_Show(m.ptr)
 }
 
 type menu struct {
@@ -58,7 +58,7 @@ type menu struct {
 	component app.Componer
 }
 
-func newMenu() *menu {
+func newMenu(m app.Menu) *menu {
 	id := uid.Context()
 
 	cmenu := C.Menu__{
@@ -84,7 +84,6 @@ func (m *menu) Mount(c app.Componer) {
 	if m.component != nil {
 		C.Menu_Clear(m.ptr)
 		markup.Dismount(m.component)
-
 	}
 
 	m.component = c
@@ -219,25 +218,31 @@ func (m *menu) Render(s markup.Sync) {
 }
 
 //export onMenuItemClick
-func onMenuItemClick(id *C.char, method *C.char) {
-	markup.Call(
-		uid.ID(C.GoString(id)),
-		C.GoString(method),
-		"")
+func onMenuItemClick(cid *C.char, cmethod *C.char) {
+	id := C.GoString(cid)
+	method := C.GoString(cmethod)
+
+	app.UIChan <- func() {
+		markup.Call(uid.ID(id), method, "")
+	}
 }
 
 //export onMenuCloseFinal
 func onMenuCloseFinal(cid *C.char) {
-	ctx, err := app.ContextByID(uid.ID(C.GoString(cid)))
-	if err != nil {
-		return
-	}
-
-	menu := ctx.(*menu)
+	id := C.GoString(cid)
 
 	go func() {
 		time.Sleep(time.Millisecond * 42)
-		markup.Dismount(menu.component)
-		app.UnregisterContext(menu)
+
+		app.UIChan <- func() {
+			ctx, err := app.ContextByID(uid.ID(id))
+			if err != nil {
+				return
+			}
+
+			menu := ctx.(*menu)
+			markup.Dismount(menu.component)
+			app.UnregisterContext(menu)
+		}
 	}()
 }
