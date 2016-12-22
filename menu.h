@@ -47,6 +47,7 @@ typedef struct MenuItem__ {
 
 const void *Menu_New(Menu__ m);
 void Menu_Mount(const void *ptr, const char *rootID);
+void Menu_Show(const void *ptr);
 void Menu_Dismount(const void *ptr);
 void Menu_MountContainer(const void *ptr, MenuContainer__ container);
 void Menu_MountItem(const void *ptr, MenuItem__ item);

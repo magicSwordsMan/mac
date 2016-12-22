@@ -2,13 +2,10 @@ package mac
 
 import (
 	"testing"
-
+	"time"
 	"unsafe"
 
-	"time"
-
 	"github.com/murlokswarm/app"
-	"github.com/murlokswarm/markup"
 )
 
 type MenuComponent struct {
@@ -67,8 +64,8 @@ func (m *SubMenuComponent) Render() string {
 }
 
 func init() {
-	markup.RegisterComponent("MenuComponent", func() markup.Componer { return &MenuComponent{} })
-	markup.RegisterComponent("SubMenuComponent", func() markup.Componer { return &SubMenuComponent{} })
+	app.RegisterComponent(&MenuComponent{})
+	app.RegisterComponent(&SubMenuComponent{})
 }
 
 func TestAppMenu(t *testing.T) {
@@ -172,16 +169,6 @@ func TestMenuRender(t *testing.T) {
 	// Error.
 	c.ErrorIconExt = true
 	app.Render(c)
-}
-
-func TestOnMenuItemClick(t *testing.T) {
-	cid := cString("42")
-	defer free(unsafe.Pointer(cid))
-
-	cmethod := cString("Boo")
-	defer free(unsafe.Pointer(cmethod))
-
-	onMenuItemClick(cid, cmethod)
 }
 
 func TestOnMenuCloseFinal(t *testing.T) {

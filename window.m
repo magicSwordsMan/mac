@@ -2,7 +2,9 @@
 #include "_cgo_export.h"
 #include "color.h"
 
-const void *Window_New(Window__ w) {
+void Window_New(Window__ w) { defer(Window_new(w);); }
+
+void Window_new(Window__ w) {
   NSRect contentRect = NSMakeRect(w.X, w.Y, w.Width, w.Height);
   NSUInteger styleMask =
       NSWindowStyleMaskTitled | NSWindowStyleMaskFullSizeContentView |
@@ -75,8 +77,7 @@ const void *Window_New(Window__ w) {
     win.title = [NSString stringWithUTF8String:w.Title];
   }
 
-  [win.windowController showWindow:nil];
-  return CFBridgingRetain(win);
+  onWindowCreated((void *)CFBridgingRetain(win));
 }
 
 WKWebView *Window_NewWebview(WindowController *controller, NSString *HTML,
@@ -97,13 +98,6 @@ WKWebView *Window_NewWebview(WindowController *controller, NSString *HTML,
   // Page loading.
   NSURL *baseURL = [NSURL fileURLWithPath:resourcePath];
   [webview loadHTMLString:HTML baseURL:baseURL];
-
-  while (dispatch_semaphore_wait(controller.sema, DISPATCH_TIME_NOW)) {
-    [[NSRunLoop currentRunLoop]
-           runMode:NSDefaultRunLoopMode
-        beforeDate:[NSDate dateWithTimeIntervalSinceNow:10]];
-  }
-
   return webview;
 }
 
@@ -151,6 +145,11 @@ void Window_SetTitleBar(NSWindow *win, TitleBar *titleBar) {
                                               titleBar)]];
 }
 
+void Window_Show(const void *ptr) {
+  NSWindow *win = (__bridge NSWindow *)ptr;
+  defer([win makeKeyAndOrderFront:nil];);
+}
+
 void Window_CallJS(const void *ptr, const char *js) {
   NSWindow *win = (__bridge NSWindow *)ptr;
   WindowController *controller = (WindowController *)win.windowController;
@@ -194,7 +193,7 @@ void Window_Close(const void *ptr) {
 
 - (void)webView:(WKWebView *)webView
     didFinishNavigation:(WKNavigation *)navigation {
-  dispatch_semaphore_signal(self.sema);
+  onWindowWebviewLoaded();
 }
 
 - (void)userContentController:(WKUserContentController *)userContentController

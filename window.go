@@ -5,14 +5,21 @@ package mac
 */
 import "C"
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
+	"time"
 	"unsafe"
 
 	"github.com/murlokswarm/app"
 	"github.com/murlokswarm/log"
 	"github.com/murlokswarm/markup"
 	"github.com/murlokswarm/uid"
+)
+
+var (
+	winPtrChan    = make(chan unsafe.Pointer)
+	winloadedChan = make(chan bool)
 )
 
 type window struct {
@@ -24,7 +31,6 @@ type window struct {
 
 func newWindow(w app.Window) *window {
 	id := uid.Context()
-
 	htmlCtx := app.HTMLContext{
 		ID:       id,
 		Title:    w.Title,
@@ -51,20 +57,23 @@ func newWindow(w app.Window) *window {
 		HTML:            C.CString(htmlCtx.HTML()),
 		ResourcePath:    C.CString(app.Resources().Path()),
 	}
-
 	defer free(unsafe.Pointer(cwin.ID))
 	defer free(unsafe.Pointer(cwin.Title))
 	defer free(unsafe.Pointer(cwin.BackgroundColor))
 	defer free(unsafe.Pointer(cwin.HTML))
 	defer free(unsafe.Pointer(cwin.ResourcePath))
 
+	C.Window_New(cwin)
 	win := &window{
 		id:     id,
-		ptr:    C.Window_New(cwin),
+		ptr:    <-winPtrChan,
 		config: w,
 	}
-
 	app.RegisterContext(win)
+
+	<-winloadedChan
+	time.Sleep(time.Millisecond * 42)
+	C.Window_Show(win.ptr)
 	return win
 }
 
@@ -73,22 +82,13 @@ func (w *window) ID() uid.ID {
 }
 
 func (w *window) Mount(c app.Componer) {
-	var html string
-	var err error
-
 	if w.component != nil {
 		markup.Dismount(w.component)
 	}
 
 	w.component = c
-
-	if _, err = markup.Mount(c, w.ID()); err != nil {
-		log.Panic(err)
-	}
-
-	if html, err = markup.ComponentToHTML(c); err != nil {
-		log.Panic(err)
-	}
+	markup.Mount(c, w.ID())
+	html := markup.Markup(c)
 
 	html = strconv.Quote(html)
 	call := fmt.Sprintf(`Mount("%v", %v)`, w.ID(), html)
@@ -99,10 +99,32 @@ func (w *window) Mount(c app.Componer) {
 	C.Window_CallJS(w.ptr, ccall)
 }
 
-func (w *window) Render(elem *markup.Element) {
-	html := strconv.Quote(elem.HTML())
-	call := fmt.Sprintf(`Render("%v", %v)`, elem.ID, html)
+func (w *window) Render(s markup.Sync) {
+	if s.Scope == markup.FullSync {
+		w.renderFullNode(s.Node)
+		return
+	}
 
+	w.renderAttributes(s.Node.ID, s.Attributes)
+}
+
+func (w *window) renderFullNode(n *markup.Node) {
+	html := strconv.Quote(n.Markup())
+
+	call := fmt.Sprintf(`RenderFull("%v", %v)`, n.ID, html)
+	ccall := C.CString(call)
+	defer free(unsafe.Pointer(ccall))
+
+	C.Window_CallJS(w.ptr, ccall)
+}
+
+func (w *window) renderAttributes(nodeID uid.ID, attrs markup.AttributeMap) {
+	d, err := json.Marshal(attrs)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	call := fmt.Sprintf(`RenderAttributes("%v", %v)`, nodeID, string(d))
 	ccall := C.CString(call)
 	defer free(unsafe.Pointer(ccall))
 
@@ -135,141 +157,206 @@ func (w *window) Close() {
 	C.Window_Close(w.ptr)
 }
 
+//export onWindowCreated
+func onWindowCreated(ptr unsafe.Pointer) {
+	winPtrChan <- ptr
+}
+
+//export onWindowWebviewLoaded
+func onWindowWebviewLoaded() {
+	winloadedChan <- true
+}
+
 //export onWindowMinimize
 func onWindowMinimize(cid *C.char) {
-	ctx, err := app.ContextByID(uid.ID(C.GoString(cid)))
-	if err != nil {
-		return
-	}
+	id := C.GoString(cid)
 
-	win := ctx.(*window)
+	app.UIChan <- func() {
+		ctx, err := app.ContextByID(uid.ID(id))
+		if err != nil {
+			return
+		}
 
-	if win.config.OnMinimize != nil {
-		win.config.OnMinimize()
+		win := ctx.(*window)
+
+		if win.config.OnMinimize != nil {
+			win.config.OnMinimize()
+		}
 	}
 }
 
 //export onWindowDeminimize
 func onWindowDeminimize(cid *C.char) {
-	ctx, err := app.ContextByID(uid.ID(C.GoString(cid)))
-	if err != nil {
-		return
-	}
+	id := C.GoString(cid)
 
-	win := ctx.(*window)
+	app.UIChan <- func() {
+		ctx, err := app.ContextByID(uid.ID(id))
+		if err != nil {
+			return
+		}
 
-	if win.config.OnDeminimize != nil {
-		win.config.OnDeminimize()
+		win := ctx.(*window)
+
+		if win.config.OnDeminimize != nil {
+			win.config.OnDeminimize()
+		}
 	}
 }
 
 //export onWindowFullScreen
 func onWindowFullScreen(cid *C.char) {
-	ctx, err := app.ContextByID(uid.ID(C.GoString(cid)))
-	if err != nil {
-		return
-	}
+	id := C.GoString(cid)
 
-	win := ctx.(*window)
+	app.UIChan <- func() {
+		ctx, err := app.ContextByID(uid.ID(id))
+		if err != nil {
+			return
+		}
 
-	if win.config.OnFullScreen != nil {
-		win.config.OnFullScreen()
+		win := ctx.(*window)
+
+		if win.config.OnFullScreen != nil {
+			win.config.OnFullScreen()
+		}
 	}
 }
 
 //export onWindowExitFullScreen
 func onWindowExitFullScreen(cid *C.char) {
-	ctx, err := app.ContextByID(uid.ID(C.GoString(cid)))
-	if err != nil {
-		return
-	}
+	id := C.GoString(cid)
 
-	win := ctx.(*window)
+	app.UIChan <- func() {
+		ctx, err := app.ContextByID(uid.ID(id))
+		if err != nil {
+			return
+		}
 
-	if win.config.OnExitFullScreen != nil {
-		win.config.OnExitFullScreen()
+		win := ctx.(*window)
+
+		if win.config.OnExitFullScreen != nil {
+			win.config.OnExitFullScreen()
+		}
 	}
 }
 
 //export onWindowMove
-func onWindowMove(cid *C.char, x C.CGFloat, y C.CGFloat) {
-	ctx, err := app.ContextByID(uid.ID(C.GoString(cid)))
-	if err != nil {
-		return
-	}
+func onWindowMove(cid *C.char, cx C.CGFloat, cy C.CGFloat) {
+	id := C.GoString(cid)
+	x := float64(cx)
+	y := float64(cy)
 
-	win := ctx.(*window)
+	app.UIChan <- func() {
+		ctx, err := app.ContextByID(uid.ID(id))
+		if err != nil {
+			return
+		}
 
-	if win.config.OnMove != nil {
-		win.config.OnMove(float64(x), float64(y))
+		win := ctx.(*window)
+
+		if win.config.OnMove != nil {
+			win.config.OnMove(x, y)
+		}
 	}
 }
 
 //export onWindowResize
 func onWindowResize(cid *C.char, width C.CGFloat, height C.CGFloat) {
-	ctx, err := app.ContextByID(uid.ID(C.GoString(cid)))
-	if err != nil {
-		return
-	}
+	id := C.GoString(cid)
+	w := float64(width)
+	h := float64(height)
 
-	win := ctx.(*window)
+	app.UIChan <- func() {
+		ctx, err := app.ContextByID(uid.ID(id))
+		if err != nil {
+			return
+		}
 
-	if win.config.OnResize != nil {
-		win.config.OnResize(float64(width), float64(height))
+		win := ctx.(*window)
+
+		if win.config.OnResize != nil {
+			win.config.OnResize(w, h)
+		}
 	}
 }
 
 //export onWindowFocus
 func onWindowFocus(cid *C.char) {
-	ctx, err := app.ContextByID(uid.ID(C.GoString(cid)))
-	if err != nil {
-		return
-	}
+	id := C.GoString(cid)
 
-	win := ctx.(*window)
+	app.UIChan <- func() {
+		ctx, err := app.ContextByID(uid.ID(id))
+		if err != nil {
+			return
+		}
 
-	if win.config.OnFocus != nil {
-		win.config.OnFocus()
+		win := ctx.(*window)
+
+		if win.config.OnFocus != nil {
+			win.config.OnFocus()
+		}
 	}
 }
 
 //export onWindowBlur
 func onWindowBlur(cid *C.char) {
-	ctx, err := app.ContextByID(uid.ID(C.GoString(cid)))
-	if err != nil {
-		return
-	}
+	id := C.GoString(cid)
 
-	win := ctx.(*window)
+	app.UIChan <- func() {
+		ctx, err := app.ContextByID(uid.ID(id))
+		if err != nil {
+			return
+		}
 
-	if win.config.OnBlur != nil {
-		win.config.OnBlur()
+		win := ctx.(*window)
+
+		if win.config.OnBlur != nil {
+			win.config.OnBlur()
+		}
 	}
 }
 
 //export onWindowClose
 func onWindowClose(cid *C.char) bool {
-	ctx, err := app.ContextByID(uid.ID(C.GoString(cid)))
-	if err != nil {
-		return true
+	id := C.GoString(cid)
+	closeChan := make(chan bool)
+
+	app.UIChan <- func() {
+		ctx, err := app.ContextByID(uid.ID(id))
+		if err != nil {
+			closeChan <- true
+		}
+
+		win := ctx.(*window)
+
+		if win.config.OnClose != nil {
+			closeChan <- win.config.OnClose()
+			return
+		}
+		closeChan <- true
 	}
 
-	win := ctx.(*window)
-
-	if win.config.OnClose != nil {
-		return win.config.OnClose()
-	}
-	return true
+	return <-closeChan
 }
 
 //export onWindowCloseFinal
 func onWindowCloseFinal(cid *C.char) {
-	ctx, err := app.ContextByID(uid.ID(C.GoString(cid)))
-	if err != nil {
-		return
+	id := C.GoString(cid)
+
+	app.UIChan <- func() {
+		ctx, err := app.ContextByID(uid.ID(id))
+		if err != nil {
+			return
+		}
+
+		win := ctx.(*window)
+		markup.Dismount(win.component)
+		app.UnregisterContext(win)
+	}
+}
+
+func test() {
+	app.UIChan <- func() {
+
 	}
 
-	win := ctx.(*window)
-	markup.Dismount(win.component)
-	app.UnregisterContext(win)
 }

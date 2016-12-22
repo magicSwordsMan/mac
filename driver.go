@@ -18,10 +18,10 @@ import (
 	"strings"
 	"unsafe"
 
+	"runtime"
+
 	"github.com/murlokswarm/app"
 	"github.com/murlokswarm/log"
-	"github.com/murlokswarm/markup"
-	"github.com/murlokswarm/uid"
 )
 
 var (
@@ -44,6 +44,8 @@ type Driver struct {
 // NewDriver creates a new MacOS driver.
 // It initializes the Cocoa app.
 func NewDriver() *Driver {
+	runtime.LockOSThread()
+
 	resources := app.ResourcePath("resources")
 	if isAppPackaged() {
 		cresources := C.Driver_Resources()
@@ -53,7 +55,7 @@ func NewDriver() *Driver {
 	return &Driver{
 		ptr:       C.Driver_Init(),
 		resources: resources,
-		appMenu:   newAppMenu(),
+		appMenu:   newMenuBar(),
 		dock:      newDock(),
 	}
 }
@@ -72,15 +74,15 @@ func (d *Driver) NewContext(ctx interface{}) app.Contexter {
 		return newWindow(c)
 
 	case app.ContextMenu:
-		return newContextMenu()
+		return newContextMenu(c)
 
 	default:
 		return app.NewZeroContext(reflect.TypeOf(c).String())
 	}
 }
 
-// AppMenu returns the application menu.
-func (d *Driver) AppMenu() app.Contexter {
+// MenuBar returns the menu bar.
+func (d *Driver) MenuBar() app.Contexter {
 	return d.appMenu
 }
 
@@ -129,63 +131,70 @@ func ensureLaunched() {
 
 //export onLaunch
 func onLaunch() {
-	if app.OnLaunch != nil {
-		launched = true
-		app.OnLaunch()
+	launched = true
+
+	app.UIChan <- func() {
+		if app.OnLaunch != nil {
+			app.OnLaunch()
+		}
 	}
 }
 
 //export onFocus
 func onFocus() {
-	if app.OnFocus != nil {
-		app.OnFocus()
+	app.UIChan <- func() {
+		if app.OnFocus != nil {
+			app.OnFocus()
+		}
 	}
 }
 
 //export onBlur
 func onBlur() {
-	if app.OnBlur != nil {
-		app.OnBlur()
+	app.UIChan <- func() {
+		if app.OnBlur != nil {
+			app.OnBlur()
+		}
 	}
 }
 
 //export onReopen
 func onReopen(hasVisibleWindow bool) {
-	if app.OnReopen != nil {
-		app.OnReopen(hasVisibleWindow)
+	app.UIChan <- func() {
+		if app.OnReopen != nil {
+			app.OnReopen(hasVisibleWindow)
+		}
 	}
 }
 
 //export onFileOpen
-func onFileOpen(filename *C.char) {
-	if app.OnFileOpen != nil {
-		app.OnFileOpen(C.GoString(filename))
+func onFileOpen(cfilename *C.char) {
+	filename := C.GoString(cfilename)
+
+	app.UIChan <- func() {
+		if app.OnFileOpen != nil {
+			app.OnFileOpen(filename)
+		}
 	}
 }
 
 //export onTerminate
 func onTerminate() bool {
-	if app.OnTerminate != nil {
-		return app.OnTerminate()
+	termChan := make(chan bool)
+
+	app.UIChan <- func() {
+		if app.OnTerminate != nil {
+			termChan <- app.OnTerminate()
+		}
+
+		termChan <- true
 	}
-	return true
+	return <-termChan
 }
 
 //export onFinalize
 func onFinalize() {
 	if app.OnFinalize != nil {
 		app.OnFinalize()
-	}
-}
-
-//export onEvent
-func onEvent(id *C.char, name *C.char, jsonArg *C.char) {
-	err := markup.Call(uid.ID(
-		string(C.GoString(id))),
-		C.GoString(name),
-		C.GoString(jsonArg))
-
-	if err != nil {
-		log.Error(err)
 	}
 }

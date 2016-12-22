@@ -19,7 +19,7 @@ type dock struct {
 
 func newDock() *dock {
 	return &dock{
-		menu: newMenu(),
+		menu: newMenu(app.Menu{}),
 	}
 }
 
