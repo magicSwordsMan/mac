@@ -5,6 +5,7 @@ package mac
 */
 import "C"
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"unsafe"
@@ -73,22 +74,13 @@ func (w *window) ID() uid.ID {
 }
 
 func (w *window) Mount(c app.Componer) {
-	var html string
-	var err error
-
 	if w.component != nil {
 		markup.Dismount(w.component)
 	}
 
 	w.component = c
-
-	if _, err = markup.Mount(c, w.ID()); err != nil {
-		log.Panic(err)
-	}
-
-	if html, err = markup.ComponentToHTML(c); err != nil {
-		log.Panic(err)
-	}
+	markup.Mount(c, w.ID())
+	html := markup.Markup(c)
 
 	html = strconv.Quote(html)
 	call := fmt.Sprintf(`Mount("%v", %v)`, w.ID(), html)
@@ -99,10 +91,32 @@ func (w *window) Mount(c app.Componer) {
 	C.Window_CallJS(w.ptr, ccall)
 }
 
-func (w *window) Render(elem *markup.Element) {
-	html := strconv.Quote(elem.HTML())
-	call := fmt.Sprintf(`Render("%v", %v)`, elem.ID, html)
+func (w *window) Render(s markup.Sync) {
+	if s.Scope == markup.FullSync {
+		w.renderFullNode(s.Node)
+		return
+	}
 
+	w.renderAttributes(s.Node.ID, s.Attributes)
+}
+
+func (w *window) renderFullNode(n *markup.Node) {
+	html := strconv.Quote(n.Markup())
+
+	call := fmt.Sprintf(`RenderFull("%v", %v)`, n.ID, html)
+	ccall := C.CString(call)
+	defer free(unsafe.Pointer(ccall))
+
+	C.Window_CallJS(w.ptr, ccall)
+}
+
+func (w *window) renderAttributes(nodeID uid.ID, attrs markup.AttributeMap) {
+	d, err := json.Marshal(attrs)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	call := fmt.Sprintf(`RenderAttributes("%v", %v)`, nodeID, string(d))
 	ccall := C.CString(call)
 	defer free(unsafe.Pointer(ccall))
 

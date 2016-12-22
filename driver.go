@@ -180,12 +180,8 @@ func onFinalize() {
 
 //export onEvent
 func onEvent(id *C.char, name *C.char, jsonArg *C.char) {
-	err := markup.Call(uid.ID(
-		string(C.GoString(id))),
+	markup.Call(
+		uid.ID(string(C.GoString(id))),
 		C.GoString(name),
 		C.GoString(jsonArg))
-
-	if err != nil {
-		log.Error(err)
-	}
 }

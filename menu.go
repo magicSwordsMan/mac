@@ -88,11 +88,7 @@ func (m *menu) Mount(c app.Componer) {
 	}
 
 	m.component = c
-
-	root, err := markup.Mount(c, m.ID())
-	if err != nil {
-		log.Panic(err)
-	}
+	root := markup.Mount(c, m.ID())
 
 	if err := m.mount(root); err != nil {
 		log.Panic(err)
@@ -104,46 +100,46 @@ func (m *menu) Mount(c app.Componer) {
 	C.Menu_Mount(m.ptr, rootID)
 }
 
-func (m *menu) mount(elem *markup.Element) (err error) {
-	switch elem.Name {
+func (m *menu) mount(n *markup.Node) (err error) {
+	switch n.Tag {
 	case "menu":
-		if err = m.mountContainer(elem); err != nil {
+		if err = m.mountContainer(n); err != nil {
 			return
 		}
 
 	case "menuitem":
-		if err = m.mountItem(elem); err != nil {
+		if err = m.mountItem(n); err != nil {
 			return
 		}
 
 	default:
-		return fmt.Errorf("%v markup is not supported in a menu context. valid tags are menu and menuitem", elem)
+		return fmt.Errorf("%v markup is not supported in a menu context. valid tags are menu and menuitem", n)
 	}
 
-	for _, child := range elem.Children {
-		if child.Type == markup.Component {
-			child, _ = markup.ComponentRoot(child.Component)
+	for _, child := range n.Children {
+		if child.Type == markup.ComponentNode {
+			child = markup.Root(child.Component)
 		}
 
 		if err = m.mount(child); err != nil {
 			return
 		}
 
-		m.associate(elem, child)
+		m.associate(n, child)
 	}
 	return
 }
 
-func (m *menu) mountContainer(elem *markup.Element) error {
-	if elem.Parent != nil && elem.Parent.Name != "menu" {
-		return fmt.Errorf("%v can only have another menu as parent: %v", elem, elem.Parent)
+func (m *menu) mountContainer(n *markup.Node) error {
+	if n.Parent != nil && n.Parent.Tag != "menu" {
+		return fmt.Errorf("%v can only have another menu as parent: %v", n, n.Parent)
 	}
 
-	label, _ := elem.Attributes.Attr("label")
+	label, _ := n.Attributes["label"]
 
 	container := C.MenuContainer__{
-		ID:    C.CString(elem.ID.String()),
-		Label: C.CString(label.Value),
+		ID:    C.CString(n.ID.String()),
+		Label: C.CString(label),
 	}
 
 	defer free(unsafe.Pointer(container.ID))
@@ -153,26 +149,26 @@ func (m *menu) mountContainer(elem *markup.Element) error {
 	return nil
 }
 
-func (m *menu) mountItem(elem *markup.Element) (err error) {
+func (m *menu) mountItem(n *markup.Node) (err error) {
 	var iconPath string
 
-	if elem.Parent == nil || elem.Parent.Name != "menu" {
-		return fmt.Errorf("%v should have a menu as parent: %v", elem, elem.Parent)
+	if n.Parent == nil || n.Parent.Tag != "menu" {
+		return fmt.Errorf("%v should have a menu as parent: %v", n, n.Parent)
 	}
 
-	label, _ := elem.Attributes.Attr("label")
-	icon, _ := elem.Attributes.Attr("icon")
-	shortcut, _ := elem.Attributes.Attr("shortcut")
-	selector, _ := elem.Attributes.Attr("selector")
-	onclick, _ := elem.Attributes.Attr("_onclick")
-	disabled, _ := elem.Attributes.Attr("disabled")
-	separator, _ := elem.Attributes.Attr("separator")
+	label, _ := n.Attributes["label"]
+	icon, _ := n.Attributes["icon"]
+	shortcut, _ := n.Attributes["shortcut"]
+	selector, _ := n.Attributes["selector"]
+	onclick, _ := n.Attributes["_onclick"]
+	disabled, _ := n.Attributes["disabled"]
+	separator, _ := n.Attributes["separator"]
 
-	isDisabled, _ := strconv.ParseBool(disabled.Value)
-	isSeparator, _ := strconv.ParseBool(separator.Value)
+	isDisabled, _ := strconv.ParseBool(disabled)
+	isSeparator, _ := strconv.ParseBool(separator)
 
-	if len(icon.Value) != 0 {
-		iconPath = app.Resources().Join(icon.Value)
+	if len(icon) != 0 {
+		iconPath = app.Resources().Join(icon)
 
 		if !app.IsSupportedImageExtension(iconPath) {
 			err = fmt.Errorf("extension of %v is not supported", iconPath)
@@ -185,12 +181,12 @@ func (m *menu) mountItem(elem *markup.Element) (err error) {
 	}
 
 	item := C.MenuItem__{
-		ID:        C.CString(elem.ID.String()),
-		Label:     C.CString(label.Value),
+		ID:        C.CString(n.ID.String()),
+		Label:     C.CString(label),
 		Icon:      C.CString(iconPath),
-		Shortcut:  C.CString(shortcut.Value),
-		Selector:  C.CString(selector.Value),
-		OnClick:   C.CString(onclick.Value),
+		Shortcut:  C.CString(shortcut),
+		Selector:  C.CString(selector),
+		OnClick:   C.CString(onclick),
 		Disabled:  boolToBOOL(isDisabled),
 		Separator: boolToBOOL(isSeparator),
 	}
@@ -206,7 +202,7 @@ func (m *menu) mountItem(elem *markup.Element) (err error) {
 	return
 }
 
-func (m *menu) associate(parent *markup.Element, child *markup.Element) {
+func (m *menu) associate(parent *markup.Node, child *markup.Node) {
 	parentID := C.CString(parent.ID.String())
 	childID := C.CString(child.ID.String())
 
@@ -216,17 +212,18 @@ func (m *menu) associate(parent *markup.Element, child *markup.Element) {
 	C.Menu_Associate(m.ptr, parentID, childID)
 }
 
-func (m *menu) Render(elem *markup.Element) {
-	if err := m.mount(elem); err != nil {
+func (m *menu) Render(s markup.Sync) {
+	if err := m.mount(s.Node); err != nil {
 		log.Error(err)
 	}
 }
 
 //export onMenuItemClick
 func onMenuItemClick(id *C.char, method *C.char) {
-	if err := markup.Call(uid.ID(C.GoString(id)), C.GoString(method), ""); err != nil {
-		log.Error(err)
-	}
+	markup.Call(
+		uid.ID(C.GoString(id)),
+		C.GoString(method),
+		"")
 }
 
 //export onMenuCloseFinal

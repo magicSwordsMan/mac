@@ -110,7 +110,4 @@ func TestOnFinalize(t *testing.T) {
 
 func TestOnEvent(t *testing.T) {
 	onEvent(cString("elem-1"), cString("Clicked"), cString("{}"))
-
-	// Error.
-	onEvent(cString("42"), cString(""), cString("{}"))
 }
