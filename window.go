@@ -324,6 +324,7 @@ func onWindowClose(cid *C.char) bool {
 		ctx, err := app.ContextByID(uid.ID(id))
 		if err != nil {
 			closeChan <- true
+			return
 		}
 
 		win := ctx.(*window)
@@ -352,11 +353,4 @@ func onWindowCloseFinal(cid *C.char) {
 		markup.Dismount(win.component)
 		app.UnregisterContext(win)
 	}
-}
-
-func test() {
-	app.UIChan <- func() {
-
-	}
-
 }

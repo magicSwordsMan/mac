@@ -7,7 +7,7 @@ import (
 )
 
 func TestDriver(t *testing.T) {
-	t.Log(driver.AppMenu())
+	t.Log(driver.MenuBar())
 	t.Log(driver.Dock())
 	t.Log(driver.Resources())
 	t.Log(driver.JavascriptBridge())

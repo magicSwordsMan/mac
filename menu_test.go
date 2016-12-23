@@ -68,12 +68,12 @@ func init() {
 	app.RegisterComponent(&SubMenuComponent{})
 }
 
-func TestAppMenu(t *testing.T) {
+func TestMenuBar(t *testing.T) {
 	launched = true
 	defer func() { launched = false }()
 
 	c := &SubMenuComponent{}
-	m := newAppMenu()
+	m := newMenuBar()
 	m.Mount(c)
 }
 
@@ -82,16 +82,16 @@ func TestContextMenu(t *testing.T) {
 	defer func() { launched = false }()
 
 	c := &SubMenuComponent{}
-	m := newContextMenu()
+	m := newContextMenu(app.ContextMenu{})
 	m.Mount(c)
 }
 
 func TestMenu(t *testing.T) {
-	newMenu()
+	newMenu(app.Menu{})
 }
 
 func TestMenuMount(t *testing.T) {
-	m := newMenu()
+	m := newMenu(app.Menu{})
 
 	c := &MenuComponent{}
 	m.Mount(c)
@@ -103,7 +103,8 @@ func TestMenuMount(t *testing.T) {
 func TestMenuMountBadMarkup(t *testing.T) {
 	defer func() { recover() }()
 
-	m := newMenu()
+	m := newMenu(app.Menu{})
+
 	c := &MenuComponent{ErrorBadMarkup: true}
 	m.Mount(c)
 	t.Error("should panic")
@@ -112,7 +113,7 @@ func TestMenuMountBadMarkup(t *testing.T) {
 func TestMenuMountInvalidTag(t *testing.T) {
 	defer func() { recover() }()
 
-	m := newMenu()
+	m := newMenu(app.Menu{})
 	c := &MenuComponent{ErrorInvalidTag: true}
 	m.Mount(c)
 	t.Error("should panic")
@@ -121,7 +122,7 @@ func TestMenuMountInvalidTag(t *testing.T) {
 func TestMenuMountErrorCompositionContainer(t *testing.T) {
 	defer func() { recover() }()
 
-	m := newMenu()
+	m := newMenu(app.Menu{})
 	c := &MenuComponent{ErrorCompositionContainer: true}
 	m.Mount(c)
 	t.Error("should panic")
@@ -130,8 +131,7 @@ func TestMenuMountErrorCompositionContainer(t *testing.T) {
 func TestMenuMountErrorCompositionItem(t *testing.T) {
 	defer func() { recover() }()
 
-	m := newMenu()
-
+	m := newMenu(app.Menu{})
 	c := &MenuComponent{ErrorCompositionItem: true}
 	m.Mount(c)
 	t.Error("should panic")
@@ -140,8 +140,7 @@ func TestMenuMountErrorCompositionItem(t *testing.T) {
 func TestMenuMountErrorNonexistentIcon(t *testing.T) {
 	defer func() { recover() }()
 
-	m := newMenu()
-
+	m := newMenu(app.Menu{})
 	c := &MenuComponent{ErrorIconNonexistent: true}
 	m.Mount(c)
 	t.Error("should panic")
@@ -150,16 +149,14 @@ func TestMenuMountErrorNonexistentIcon(t *testing.T) {
 func TestMenuMountErrorIconExt(t *testing.T) {
 	defer func() { recover() }()
 
-	m := newMenu()
-
+	m := newMenu(app.Menu{})
 	c := &MenuComponent{ErrorIconExt: true}
 	m.Mount(c)
 	t.Error("should panic")
 }
 
 func TestMenuRender(t *testing.T) {
-	m := newMenu()
-
+	m := newMenu(app.Menu{})
 	c := &MenuComponent{}
 	m.Mount(c)
 
@@ -172,7 +169,7 @@ func TestMenuRender(t *testing.T) {
 }
 
 func TestOnMenuCloseFinal(t *testing.T) {
-	m := newMenu()
+	m := newMenu(app.Menu{})
 
 	cid := cString(m.ID().String())
 	defer free(unsafe.Pointer(cid))

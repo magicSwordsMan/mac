@@ -185,6 +185,7 @@ func onTerminate() bool {
 	app.UIChan <- func() {
 		if app.OnTerminate != nil {
 			termChan <- app.OnTerminate()
+			return
 		}
 
 		termChan <- true
