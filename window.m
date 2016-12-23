@@ -124,7 +124,7 @@ void Window_SetWebview(NSWindow *win, WKWebView *webview) {
 }
 
 void Window_SetTitleBar(NSWindow *win, TitleBar *titleBar) {
-  titleBar.translatesAutoresizingMaskIntoConstraints = false;
+  titleBar.translatesAutoresizingMaskIntoConstraints = NO;
 
   [win.contentView addSubview:titleBar];
   [win.contentView
@@ -284,8 +284,11 @@ void Window_Close(const void *ptr) {
 }
 
 - (void)mouseUp:(NSEvent *)event {
-  NSInteger clickCount = [event clickCount];
-  if (2 == clickCount) {
+  WindowController *controller =
+      (WindowController *)self.window.windowController;
+  [controller.webview mouseUp:event];
+
+  if (2 == event.clickCount) {
     [self.window zoom:nil];
   }
 }
