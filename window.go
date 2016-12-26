@@ -12,6 +12,7 @@ import (
 	"unsafe"
 
 	"github.com/murlokswarm/app"
+	"github.com/murlokswarm/errors"
 	"github.com/murlokswarm/log"
 	"github.com/murlokswarm/markup"
 	"github.com/murlokswarm/uid"
@@ -121,7 +122,7 @@ func (w *window) renderFullNode(n *markup.Node) {
 func (w *window) renderAttributes(nodeID uid.ID, attrs markup.AttributeMap) {
 	d, err := json.Marshal(attrs)
 	if err != nil {
-		log.Panic(err)
+		log.Panic(errors.New(err))
 	}
 
 	call := fmt.Sprintf(`RenderAttributes("%v", %v)`, nodeID, string(d))

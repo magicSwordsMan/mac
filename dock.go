@@ -10,6 +10,7 @@ import (
 	"unsafe"
 
 	"github.com/murlokswarm/app"
+	"github.com/murlokswarm/errors"
 	"github.com/murlokswarm/log"
 )
 
@@ -41,12 +42,12 @@ func (d *dock) SetIcon(path string) {
 	}
 
 	if !app.IsSupportedImageExtension(path) {
-		log.Errorf("extension of %v is not supported", path)
+		log.Error(errors.Newf("extension of %v is not supported", path))
 		return
 	}
 
 	if _, err := os.Stat(path); err != nil {
-		log.Error(err)
+		log.Error(errors.New(err))
 		return
 	}
 

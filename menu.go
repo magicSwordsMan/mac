@@ -15,6 +15,7 @@ import (
 	"os"
 
 	"github.com/murlokswarm/app"
+	"github.com/murlokswarm/errors"
 	"github.com/murlokswarm/log"
 	"github.com/murlokswarm/markup"
 	"github.com/murlokswarm/uid"
@@ -90,7 +91,7 @@ func (m *menu) Mount(c app.Componer) {
 	root := markup.Mount(c, m.ID())
 
 	if err := m.mount(root); err != nil {
-		log.Panic(err)
+		log.Panic(errors.New(err))
 	}
 
 	rootID := C.CString(root.ID.String())
@@ -213,7 +214,7 @@ func (m *menu) associate(parent *markup.Node, child *markup.Node) {
 
 func (m *menu) Render(s markup.Sync) {
 	if err := m.mount(s.Node); err != nil {
-		log.Error(err)
+		log.Error(errors.New(err))
 	}
 }
 

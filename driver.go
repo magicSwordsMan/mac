@@ -21,6 +21,7 @@ import (
 	"runtime"
 
 	"github.com/murlokswarm/app"
+	"github.com/murlokswarm/errors"
 	"github.com/murlokswarm/log"
 )
 
@@ -111,7 +112,7 @@ func isAppPackaged() (packaged bool) {
 
 	path, err := filepath.Abs(filepath.Dir(execName))
 	if err != nil {
-		log.Errorf("can't determine if app is packaged: %v", err)
+		log.Error(errors.Newf("can't determine if app is packaged: %v", err))
 		return
 	}
 
@@ -125,7 +126,7 @@ func isAppPackaged() (packaged bool) {
 
 func ensureLaunched() {
 	if !launched {
-		log.Panic(`creating and interacting with contexts requires the app to be launched. set app.OnLaunch handler and launch the app by calling app.Run()`)
+		log.Panic(errors.New(`creating and interacting with contexts requires the app to be launched. set app.OnLaunch handler and launch the app by calling app.Run()`))
 	}
 }
 
