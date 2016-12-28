@@ -40,6 +40,7 @@ type Driver struct {
 	resources app.ResourcePath
 	appMenu   app.Contexter
 	dock      app.Docker
+	share     app.Sharer
 }
 
 // NewDriver creates a new MacOS driver.
@@ -58,6 +59,7 @@ func NewDriver() *Driver {
 		resources: resources,
 		appMenu:   newMenuBar(),
 		dock:      newDock(),
+		share:     &share{},
 	}
 }
 
@@ -101,6 +103,11 @@ func (d *Driver) Resources() app.ResourcePath {
 // call go component methods.
 func (d *Driver) JavascriptBridge() string {
 	return "window.webkit.messageHandlers.Call.postMessage(msg);"
+}
+
+// Share returns a sharing service.
+func (d *Driver) Share() app.Sharer {
+	return d.share
 }
 
 func (d *Driver) terminate() {
