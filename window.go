@@ -88,7 +88,11 @@ func (w *window) Mount(c app.Componer) {
 	}
 
 	w.component = c
-	markup.Mount(c, w.ID())
+
+	if _, err := markup.Mount(c, w.ID()); err != nil {
+		log.Panic(err)
+	}
+
 	html := markup.Markup(c)
 
 	html = strconv.Quote(html)
