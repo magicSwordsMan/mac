@@ -6,13 +6,10 @@ package mac
 */
 import "C"
 import (
+	"os"
 	"strconv"
 	"time"
 	"unsafe"
-
-	"fmt"
-
-	"os"
 
 	"github.com/murlokswarm/app"
 	"github.com/murlokswarm/errors"
@@ -88,10 +85,14 @@ func (m *menu) Mount(c app.Componer) {
 	}
 
 	m.component = c
-	root := markup.Mount(c, m.ID())
+
+	root, err := markup.Mount(c, m.ID())
+	if err != nil {
+		log.Panic(err)
+	}
 
 	if err := m.mount(root); err != nil {
-		log.Panic(errors.New(err))
+		log.Panic(err)
 	}
 
 	rootID := C.CString(root.ID.String())
@@ -113,7 +114,7 @@ func (m *menu) mount(n *markup.Node) (err error) {
 		}
 
 	default:
-		return fmt.Errorf("%v markup is not supported in a menu context. valid tags are menu and menuitem", n)
+		return errors.Newf("%v markup is not supported in a menu context. valid tags are menu and menuitem", n)
 	}
 
 	for _, child := range n.Children {
@@ -132,7 +133,7 @@ func (m *menu) mount(n *markup.Node) (err error) {
 
 func (m *menu) mountContainer(n *markup.Node) error {
 	if n.Parent != nil && n.Parent.Tag != "menu" {
-		return fmt.Errorf("%v can only have another menu as parent: %v", n, n.Parent)
+		return errors.Newf("%v can only have another menu as parent: %v", n, n.Parent)
 	}
 
 	label, _ := n.Attributes["label"]
@@ -153,7 +154,7 @@ func (m *menu) mountItem(n *markup.Node) (err error) {
 	var iconPath string
 
 	if n.Parent == nil || n.Parent.Tag != "menu" {
-		return fmt.Errorf("%v should have a menu as parent: %v", n, n.Parent)
+		return errors.Newf("%v should have a menu as parent: %v", n, n.Parent)
 	}
 
 	label, _ := n.Attributes["label"]
@@ -171,7 +172,7 @@ func (m *menu) mountItem(n *markup.Node) (err error) {
 		iconPath = app.Resources().Join(icon)
 
 		if !app.IsSupportedImageExtension(iconPath) {
-			err = fmt.Errorf("extension of %v is not supported", iconPath)
+			err = errors.Newf("extension of %v is not supported", iconPath)
 			return
 		}
 
