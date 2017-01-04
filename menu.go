@@ -6,11 +6,10 @@ package mac
 */
 import "C"
 import (
+	"os"
 	"strconv"
 	"time"
 	"unsafe"
-
-	"os"
 
 	"github.com/murlokswarm/app"
 	"github.com/murlokswarm/errors"
