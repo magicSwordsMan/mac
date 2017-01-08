@@ -57,8 +57,10 @@ func (d *dock) SetIcon(path string) {
 func (d *dock) SetBadge(v interface{}) {
 	ensureLaunched()
 
+	if v == nil {
+		v = ""
+	}
 	cv := C.CString(fmt.Sprint(v))
 	defer free(unsafe.Pointer(cv))
-
 	C.Driver_SetDockBadge(cv)
 }

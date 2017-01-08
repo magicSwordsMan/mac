@@ -87,7 +87,8 @@ void Driver_SetDockIcon(const char *path) {
 }
 
 void Driver_SetDockBadge(const char *str) {
-  defer([NSApp.dockTile setBadgeLabel:[NSString stringWithUTF8String:str]];);
+  NSString *badge = [NSString stringWithUTF8String:str];
+  defer([NSApp.dockTile setBadgeLabel:badge];);
 }
 
 void Driver_ShowContextMenu(const void *menuPtr) {
