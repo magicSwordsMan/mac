@@ -32,6 +32,12 @@ void Window_new(Window__ w) {
                                                 backing:NSBackingStoreBuffered
                                                   defer:NO];
 
+  // size.
+  NSSize minSize = NSMakeSize(w.MinWidth, w.MinHeight);
+  NSSize maxSize = NSMakeSize(w.MaxWidth, w.MaxHeight);
+  win.minSize = minSize;
+  win.maxSize = maxSize;
+
   // Background.
   if (w.Vibrancy != NSVisualEffectMaterialAppearanceBased) {
     NSVisualEffectView *visualEffectView =

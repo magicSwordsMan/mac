@@ -11,6 +11,10 @@ typedef struct Window__ {
   CGFloat Y;
   CGFloat Width;
   CGFloat Height;
+  CGFloat MinWidth;
+  CGFloat MinHeight;
+  CGFloat MaxWidth;
+  CGFloat MaxHeight;
   const char *BackgroundColor;
   NSVisualEffectMaterial Vibrancy;
   BOOL Borderless;

@@ -10,6 +10,8 @@ import (
 	"strconv"
 	"unsafe"
 
+	"math"
+
 	"github.com/murlokswarm/app"
 	"github.com/murlokswarm/errors"
 	"github.com/murlokswarm/log"
@@ -39,6 +41,12 @@ func newWindow(w app.Window) *window {
 		JS:       app.Resources().JS(),
 		CSS:      app.Resources().CSS(),
 	}
+	if w.MaxWidth <= 0 {
+		w.MaxWidth = 10000
+	}
+	if w.MaxHeight <= 0 {
+		w.MaxHeight = 10000
+	}
 	cwin := C.Window__{
 		ID:              C.CString(id.String()),
 		Title:           C.CString(w.Title),
@@ -46,6 +54,10 @@ func newWindow(w app.Window) *window {
 		Y:               C.CGFloat(w.Y),
 		Width:           C.CGFloat(w.Width),
 		Height:          C.CGFloat(w.Height),
+		MinWidth:        C.CGFloat(math.Max(0, w.MinWidth)),
+		MinHeight:       C.CGFloat(math.Max(0, w.MinHeight)),
+		MaxWidth:        C.CGFloat(math.Min(w.MaxWidth, 10000)),
+		MaxHeight:       C.CGFloat(math.Min(w.MaxHeight, 10000)),
 		BackgroundColor: C.CString(w.BackgroundColor),
 		Vibrancy:        C.NSVisualEffectMaterial(w.Vibrancy),
 		Borderless:      boolToBOOL(w.Borderless),
