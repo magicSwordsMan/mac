@@ -22,10 +22,15 @@ func TestDriverNewContext(t *testing.T) {
 
 	// Menu.
 	driver.NewContext(app.ContextMenu{})
+}
 
-	// Not implemented.
+func TestDriverNewContextNotImplemented(t *testing.T) {
+	defer func() { recover() }()
+
+	launched = true
+	defer func() { launched = false }()
+
 	driver.NewContext("not implement")
-
 }
 
 func TestDriverNewContextPanic(t *testing.T) {

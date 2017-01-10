@@ -88,16 +88,13 @@ func (w *window) Mount(c app.Componer) {
 	}
 
 	w.component = c
-
 	if _, err := markup.Mount(c, w.ID()); err != nil {
 		log.Panic(err)
 	}
 
 	html := markup.Markup(c)
-
 	html = strconv.Quote(html)
 	call := fmt.Sprintf(`Mount("%v", %v)`, w.ID(), html)
-
 	ccall := C.CString(call)
 	defer free(unsafe.Pointer(ccall))
 
@@ -109,13 +106,11 @@ func (w *window) Render(s markup.Sync) {
 		w.renderFullNode(s.Node)
 		return
 	}
-
 	w.renderAttributes(s.Node.ID, s.Attributes)
 }
 
 func (w *window) renderFullNode(n *markup.Node) {
 	html := strconv.Quote(n.Markup())
-
 	call := fmt.Sprintf(`RenderFull("%v", %v)`, n.ID, html)
 	ccall := C.CString(call)
 	defer free(unsafe.Pointer(ccall))
@@ -181,9 +176,7 @@ func onWindowMinimize(cid *C.char) {
 		if err != nil {
 			return
 		}
-
 		win := ctx.(*window)
-
 		if win.config.OnMinimize != nil {
 			win.config.OnMinimize()
 		}
@@ -199,9 +192,7 @@ func onWindowDeminimize(cid *C.char) {
 		if err != nil {
 			return
 		}
-
 		win := ctx.(*window)
-
 		if win.config.OnDeminimize != nil {
 			win.config.OnDeminimize()
 		}
@@ -217,9 +208,7 @@ func onWindowFullScreen(cid *C.char) {
 		if err != nil {
 			return
 		}
-
 		win := ctx.(*window)
-
 		if win.config.OnFullScreen != nil {
 			win.config.OnFullScreen()
 		}
@@ -235,9 +224,7 @@ func onWindowExitFullScreen(cid *C.char) {
 		if err != nil {
 			return
 		}
-
 		win := ctx.(*window)
-
 		if win.config.OnExitFullScreen != nil {
 			win.config.OnExitFullScreen()
 		}
@@ -255,9 +242,7 @@ func onWindowMove(cid *C.char, cx C.CGFloat, cy C.CGFloat) {
 		if err != nil {
 			return
 		}
-
 		win := ctx.(*window)
-
 		if win.config.OnMove != nil {
 			win.config.OnMove(x, y)
 		}
@@ -275,9 +260,7 @@ func onWindowResize(cid *C.char, width C.CGFloat, height C.CGFloat) {
 		if err != nil {
 			return
 		}
-
 		win := ctx.(*window)
-
 		if win.config.OnResize != nil {
 			win.config.OnResize(w, h)
 		}
@@ -293,9 +276,7 @@ func onWindowFocus(cid *C.char) {
 		if err != nil {
 			return
 		}
-
 		win := ctx.(*window)
-
 		if win.config.OnFocus != nil {
 			win.config.OnFocus()
 		}
@@ -311,9 +292,7 @@ func onWindowBlur(cid *C.char) {
 		if err != nil {
 			return
 		}
-
 		win := ctx.(*window)
-
 		if win.config.OnBlur != nil {
 			win.config.OnBlur()
 		}
@@ -331,9 +310,7 @@ func onWindowClose(cid *C.char) bool {
 			closeChan <- true
 			return
 		}
-
 		win := ctx.(*window)
-
 		if win.config.OnClose != nil {
 			closeChan <- win.config.OnClose()
 			return
@@ -353,7 +330,6 @@ func onWindowCloseFinal(cid *C.char) {
 		if err != nil {
 			return
 		}
-
 		win := ctx.(*window)
 		markup.Dismount(win.component)
 		app.UnregisterContext(win)

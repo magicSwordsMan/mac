@@ -14,11 +14,9 @@ import "C"
 import (
 	"os"
 	"path/filepath"
-	"reflect"
+	"runtime"
 	"strings"
 	"unsafe"
-
-	"runtime"
 
 	"github.com/murlokswarm/app"
 	"github.com/murlokswarm/errors"
@@ -80,7 +78,8 @@ func (d *Driver) NewContext(ctx interface{}) app.Contexter {
 		return newContextMenu(c)
 
 	default:
-		return app.NewZeroContext(reflect.TypeOf(c).String())
+		log.Panicf("ctx for %T is not implemented", ctx)
+		return nil
 	}
 }
 

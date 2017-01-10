@@ -58,18 +58,15 @@ type menu struct {
 
 func newMenu(m app.Menu) *menu {
 	id := uid.Context()
-
 	cmenu := C.Menu__{
 		ID: C.CString(id.String()),
 	}
-
 	defer free(unsafe.Pointer(cmenu.ID))
 
 	menu := &menu{
 		id:  id,
 		ptr: C.Menu_New(cmenu),
 	}
-
 	app.RegisterContext(menu)
 	return menu
 }
@@ -85,12 +82,10 @@ func (m *menu) Mount(c app.Componer) {
 	}
 
 	m.component = c
-
 	root, err := markup.Mount(c, m.ID())
 	if err != nil {
 		log.Panic(err)
 	}
-
 	if err := m.mount(root); err != nil {
 		log.Panic(err)
 	}
@@ -121,11 +116,9 @@ func (m *menu) mount(n *markup.Node) (err error) {
 		if child.Type == markup.ComponentNode {
 			child = markup.Root(child.Component)
 		}
-
 		if err = m.mount(child); err != nil {
 			return
 		}
-
 		m.associate(n, child)
 	}
 	return
@@ -137,12 +130,10 @@ func (m *menu) mountContainer(n *markup.Node) error {
 	}
 
 	label, _ := n.Attributes["label"]
-
 	container := C.MenuContainer__{
 		ID:    C.CString(n.ID.String()),
 		Label: C.CString(label),
 	}
-
 	defer free(unsafe.Pointer(container.ID))
 	defer free(unsafe.Pointer(container.Label))
 
@@ -151,8 +142,6 @@ func (m *menu) mountContainer(n *markup.Node) error {
 }
 
 func (m *menu) mountItem(n *markup.Node) (err error) {
-	var iconPath string
-
 	if n.Parent == nil || n.Parent.Tag != "menu" {
 		return errors.Newf("%v should have a menu as parent: %v", n, n.Parent)
 	}
@@ -168,14 +157,13 @@ func (m *menu) mountItem(n *markup.Node) (err error) {
 	isDisabled, _ := strconv.ParseBool(disabled)
 	isSeparator, _ := strconv.ParseBool(separator)
 
+	var iconPath string
 	if len(icon) != 0 {
 		iconPath = app.Resources().Join(icon)
-
 		if !app.IsSupportedImageExtension(iconPath) {
 			err = errors.Newf("extension of %v is not supported", iconPath)
 			return
 		}
-
 		if _, err = os.Stat(iconPath); err != nil {
 			return
 		}
@@ -191,7 +179,6 @@ func (m *menu) mountItem(n *markup.Node) (err error) {
 		Disabled:  boolToBOOL(isDisabled),
 		Separator: boolToBOOL(isSeparator),
 	}
-
 	defer free(unsafe.Pointer(item.ID))
 	defer free(unsafe.Pointer(item.Label))
 	defer free(unsafe.Pointer(item.Icon))
@@ -206,7 +193,6 @@ func (m *menu) mountItem(n *markup.Node) (err error) {
 func (m *menu) associate(parent *markup.Node, child *markup.Node) {
 	parentID := C.CString(parent.ID.String())
 	childID := C.CString(child.ID.String())
-
 	defer free(unsafe.Pointer(parentID))
 	defer free(unsafe.Pointer(childID))
 
@@ -241,7 +227,6 @@ func onMenuCloseFinal(cid *C.char) {
 			if err != nil {
 				return
 			}
-
 			menu := ctx.(*menu)
 			markup.Dismount(menu.component)
 			app.UnregisterContext(menu)

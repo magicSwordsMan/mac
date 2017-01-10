@@ -4,8 +4,10 @@ package mac
 #include "share.h"
 */
 import "C"
-import "unsafe"
-import "net/url"
+import (
+	"net/url"
+	"unsafe"
+)
 
 type share struct {
 }
