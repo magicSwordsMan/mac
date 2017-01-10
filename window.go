@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
-	"time"
 	"unsafe"
 
 	"github.com/murlokswarm/app"
@@ -40,7 +39,6 @@ func newWindow(w app.Window) *window {
 		JS:       app.Resources().JS(),
 		CSS:      app.Resources().CSS(),
 	}
-
 	cwin := C.Window__{
 		ID:              C.CString(id.String()),
 		Title:           C.CString(w.Title),
@@ -65,15 +63,16 @@ func newWindow(w app.Window) *window {
 	defer free(unsafe.Pointer(cwin.ResourcePath))
 
 	C.Window_New(cwin)
+	ptr := <-winPtrChan
+	<-winloadedChan
+
 	win := &window{
 		id:     id,
-		ptr:    <-winPtrChan,
+		ptr:    ptr,
 		config: w,
 	}
 	app.RegisterContext(win)
 
-	<-winloadedChan
-	time.Sleep(time.Millisecond * 42)
 	C.Window_Show(win.ptr)
 	return win
 }

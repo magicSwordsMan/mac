@@ -1,7 +1,6 @@
 package mac
 
 /*
-#include "driver.h"
 #include "menu.h"
 */
 import "C"
@@ -17,38 +16,6 @@ import (
 	"github.com/murlokswarm/markup"
 	"github.com/murlokswarm/uid"
 )
-
-type menuBar struct {
-	*menu
-}
-
-func newMenuBar() *menuBar {
-	return &menuBar{
-		menu: newMenu(app.Menu{}),
-	}
-}
-
-func (m *menuBar) Mount(c app.Componer) {
-	ensureLaunched()
-	m.menu.Mount(c)
-	C.Driver_SetMenuBar(m.ptr)
-}
-
-type contextMenu struct {
-	*menu
-}
-
-func newContextMenu(m app.ContextMenu) *contextMenu {
-	cm := &contextMenu{
-		menu: newMenu(app.Menu(m)),
-	}
-	return cm
-}
-
-func (m *contextMenu) Mount(c app.Componer) {
-	m.menu.Mount(c)
-	C.Menu_Show(m.ptr)
-}
 
 type menu struct {
 	id        uid.ID

@@ -27,7 +27,6 @@ typedef struct Window__ {
                           WKScriptMessageHandler>
 @property NSString *ID;
 @property(weak) WKWebView *webview;
-@property dispatch_semaphore_t sema;
 
 - (instancetype)initWithID:(NSString *)ID;
 @end

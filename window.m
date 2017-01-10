@@ -187,7 +187,6 @@ void Window_Close(const void *ptr) {
 @implementation WindowController
 - (instancetype)initWithID:(NSString *)ID {
   self.ID = ID;
-  self.sema = dispatch_semaphore_create(0);
   return self;
 }
 
