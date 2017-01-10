@@ -14,7 +14,6 @@ import "C"
 import (
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"unsafe"
 
@@ -44,7 +43,7 @@ type Driver struct {
 // NewDriver creates a new MacOS driver.
 // It initializes the Cocoa app.
 func NewDriver() *Driver {
-	runtime.LockOSThread()
+	// runtime.LockOSThread()
 
 	resources := app.ResourcePath("resources")
 	if isAppPackaged() {
