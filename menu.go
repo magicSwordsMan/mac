@@ -10,6 +10,8 @@ import (
 	"time"
 	"unsafe"
 
+	"path/filepath"
+
 	"github.com/murlokswarm/app"
 	"github.com/murlokswarm/errors"
 	"github.com/murlokswarm/log"
@@ -126,7 +128,7 @@ func (m *menu) mountItem(n *markup.Node) (err error) {
 
 	var iconPath string
 	if len(icon) != 0 {
-		iconPath = app.Resources().Join(icon)
+		iconPath = filepath.Join(app.Storage().Resources(), icon)
 		if !app.IsSupportedImageExtension(iconPath) {
 			err = errors.Newf("extension of %v is not supported", iconPath)
 			return

@@ -7,14 +7,14 @@ package mac
 
 /*
 #cgo CFLAGS: -x objective-c -fobjc-arc
-#cgo LDFLAGS: -framework Cocoa -framework WebKit -framework CoreImage
+#cgo LDFLAGS: -framework Cocoa
+#cgo LDFLAGS: -framework WebKit
+#cgo LDFLAGS: -framework CoreImage
+#cgo LDFLAGS: -framework Security
 #include "driver.h"
 */
 import "C"
 import (
-	"os"
-	"path/filepath"
-	"strings"
 	"unsafe"
 
 	"github.com/murlokswarm/app"
@@ -33,30 +33,21 @@ func init() {
 
 // Driver is the implementation of the MacOS driver.
 type Driver struct {
-	ptr       unsafe.Pointer
-	resources app.ResourcePath
-	appMenu   app.Contexter
-	dock      app.Docker
-	share     app.Sharer
+	ptr     unsafe.Pointer
+	storage storage
+	appMenu app.Contexter
+	dock    app.Docker
+	share   app.Sharer
 }
 
 // NewDriver creates a new MacOS driver.
 // It initializes the Cocoa app.
 func NewDriver() *Driver {
-	// runtime.LockOSThread()
-
-	resources := app.ResourcePath("resources")
-	if isAppPackaged() {
-		cresources := C.Driver_Resources()
-		resources = app.ResourcePath(C.GoString(cresources))
-	}
-
 	return &Driver{
-		ptr:       C.Driver_Init(),
-		resources: resources,
-		appMenu:   newMenuBar(),
-		dock:      newDock(),
-		share:     &share{},
+		ptr:     C.Driver_Init(),
+		appMenu: newMenuBar(),
+		dock:    newDock(),
+		share:   &share{},
 	}
 }
 
@@ -92,9 +83,9 @@ func (d *Driver) Dock() app.Docker {
 	return d.dock
 }
 
-// Resources return the resources directory path.
-func (d *Driver) Resources() app.ResourcePath {
-	return d.resources
+// Storage returns the directories location to use during app lifecycle.
+func (d *Driver) Storage() app.Storer {
+	return d.storage
 }
 
 // JavascriptBridge returns the javascript statement to allow javascript to
@@ -110,23 +101,6 @@ func (d *Driver) Share() app.Sharer {
 
 func (d *Driver) terminate() {
 	C.Driver_Terminate()
-}
-
-func isAppPackaged() (packaged bool) {
-	execName := os.Args[0]
-
-	path, err := filepath.Abs(filepath.Dir(execName))
-	if err != nil {
-		log.Error(errors.Newf("can't determine if app is packaged: %v", err))
-		return
-	}
-
-	for _, dir := range strings.Split(path, "/") {
-		if strings.HasSuffix(dir, ".app") {
-			return true
-		}
-	}
-	return
 }
 
 func ensureLaunched() {

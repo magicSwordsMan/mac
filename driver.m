@@ -60,11 +60,6 @@ void Driver_Run() { [NSApp run]; }
 
 void Driver_Terminate() { defer([NSApp terminate:NSApp];); }
 
-const char *Driver_Resources() {
-  NSBundle *mainBundle = [NSBundle mainBundle];
-  return mainBundle.resourcePath.UTF8String;
-}
-
 void Driver_SetMenuBar(const void *menuPtr) {
   Menu *menu = (__bridge Menu *)menuPtr;
 

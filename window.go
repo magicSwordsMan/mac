@@ -33,13 +33,21 @@ type window struct {
 
 func newWindow(w app.Window) *window {
 	id := uid.Context()
+	css, err := app.GetFilenamesWithExtensionsFromDir(app.Storage().CSS(), ".css")
+	if err != nil {
+		log.Warn(err)
+	}
+	js, err := app.GetFilenamesWithExtensionsFromDir(app.Storage().JS(), ".js")
+	if err != nil {
+		log.Warn(err)
+	}
 	htmlCtx := app.HTMLContext{
 		ID:       id,
 		Title:    w.Title,
 		Lang:     w.Lang,
 		MurlokJS: app.MurlokJS(),
-		JS:       app.Resources().JS(),
-		CSS:      app.Resources().CSS(),
+		JS:       js,
+		CSS:      css,
 	}
 	if w.MaxWidth <= 0 {
 		w.MaxWidth = 10000
@@ -66,7 +74,7 @@ func newWindow(w app.Window) *window {
 		MinimizeHidden:  boolToBOOL(w.MinimizeHidden),
 		TitlebarHidden:  boolToBOOL(w.TitlebarHidden),
 		HTML:            C.CString(htmlCtx.HTML()),
-		ResourcePath:    C.CString(app.Resources().Path()),
+		ResourcePath:    C.CString(app.Storage().Resources()),
 	}
 	defer free(unsafe.Pointer(cwin.ID))
 	defer free(unsafe.Pointer(cwin.Title))
