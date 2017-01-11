@@ -86,7 +86,7 @@ func getSupportDirname() string {
 			log.Panic(err)
 		}
 		appname := filepath.Base(wd)
-		return filepath.Join(supportName, "murlok-dev", appname)
+		return filepath.Join(supportName, "dev.murlok", appname)
 	}
 	return filepath.Join(supportName, bundleID)
 }
