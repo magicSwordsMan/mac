@@ -170,7 +170,7 @@ func (m *menu) associate(parent *markup.Node, child *markup.Node) {
 
 func (m *menu) Render(s markup.Sync) {
 	if err := m.mount(s.Node); err != nil {
-		log.Error(errors.New(err))
+		log.Error(err)
 	}
 }
 
