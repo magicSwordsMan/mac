@@ -11,7 +11,11 @@ package mac
 #cgo LDFLAGS: -framework WebKit
 #cgo LDFLAGS: -framework CoreImage
 #cgo LDFLAGS: -framework Security
+#cgo LDFLAGS: -lpthread
 #include "driver.h"
+#include <pthread.h>
+extern void _CFRunLoopSetCurrent(CFRunLoopRef);
+extern pthread_t _CFMainPThread;
 */
 import "C"
 import (
@@ -29,8 +33,14 @@ var (
 
 func init() {
 	runtime.LockOSThread()
+	ensureMainThread()
 	driver = NewDriver()
 	app.RegisterDriver(driver)
+}
+
+func ensureMainThread() {
+	C._CFRunLoopSetCurrent(C.CFRunLoopGetMain())
+	C._CFMainPThread = C.pthread_self()
 }
 
 // Driver is the implementation of the MacOS driver.
