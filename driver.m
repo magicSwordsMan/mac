@@ -53,7 +53,7 @@ void Driver_Run() {
   DriverDelegate *delegate = [[DriverDelegate alloc] init];
   NSApp.delegate = delegate;
 
-  [NSApp run];
+  NSApplicationMain(0, nil);
 }
 
 void Driver_Terminate() { defer([NSApp terminate:NSApp];); }
