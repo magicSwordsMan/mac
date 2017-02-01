@@ -13,7 +13,6 @@
 - (instancetype)init;
 @end
 
-const void *Driver_Init();
 void Driver_Run();
 void Driver_Terminate();
 void Driver_SetMenuBar(const void *menuPtr);

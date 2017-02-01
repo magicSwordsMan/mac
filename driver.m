@@ -46,17 +46,15 @@
 }
 @end
 
-const void *Driver_Init() {
+void Driver_Run() {
   [NSApplication sharedApplication];
   [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
 
   DriverDelegate *delegate = [[DriverDelegate alloc] init];
   NSApp.delegate = delegate;
 
-  return CFBridgingRetain(delegate);
+  [NSApp run];
 }
-
-void Driver_Run() { [NSApp run]; }
 
 void Driver_Terminate() { defer([NSApp terminate:NSApp];); }
 

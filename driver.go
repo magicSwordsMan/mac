@@ -16,7 +16,6 @@ package mac
 import "C"
 import (
 	"runtime"
-	"unsafe"
 
 	"github.com/murlokswarm/app"
 	"github.com/murlokswarm/errors"
@@ -36,7 +35,6 @@ func init() {
 
 // Driver is the implementation of the MacOS driver.
 type Driver struct {
-	ptr     unsafe.Pointer
 	storage storage
 	appMenu app.Contexter
 	dock    app.Docker
@@ -47,7 +45,6 @@ type Driver struct {
 // It initializes the Cocoa app.
 func NewDriver() *Driver {
 	return &Driver{
-		ptr:     C.Driver_Init(),
 		appMenu: newMenuBar(),
 		dock:    newDock(),
 		share:   &share{},
