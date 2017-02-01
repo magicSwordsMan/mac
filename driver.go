@@ -15,6 +15,7 @@ package mac
 */
 import "C"
 import (
+	"runtime"
 	"unsafe"
 
 	"github.com/murlokswarm/app"
@@ -23,11 +24,13 @@ import (
 )
 
 var (
-	driver   = NewDriver()
+	driver   *Driver
 	launched = false
 )
 
 func init() {
+	runtime.LockOSThread()
+	driver = NewDriver()
 	app.RegisterDriver(driver)
 }
 
