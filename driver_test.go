@@ -88,22 +88,22 @@ func TestFileOpened(t *testing.T) {
 	onFileOpen(cString("zune"))
 }
 
-// func TestOnTerminate(t *testing.T) {
-// 	app.OnTerminate = func() bool {
-// 		t.Log("MacOS driver onTerminate")
-// 		return false
-// 	}
+func TestOnTerminate(t *testing.T) {
+	app.OnTerminate = func() bool {
+		t.Log("MacOS driver onTerminate")
+		return false
+	}
 
-// 	if ret := onTerminate(); ret {
-// 		t.Error("ret should be false")
-// 	}
+	if ret := onTerminate(); ret {
+		t.Error("ret should be false")
+	}
 
-// 	app.OnTerminate = nil
+	app.OnTerminate = nil
 
-// 	if ret := onTerminate(); !ret {
-// 		t.Error("ret should be true")
-// 	}
-// }
+	if ret := onTerminate(); !ret {
+		t.Error("ret should be true")
+	}
+}
 
 func TestOnFinalize(t *testing.T) {
 	app.OnFinalize = func() {
