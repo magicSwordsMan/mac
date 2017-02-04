@@ -119,7 +119,7 @@ func (m *menu) mountItem(n *markup.Node) (err error) {
 	icon, _ := n.Attributes["icon"]
 	shortcut, _ := n.Attributes["shortcut"]
 	selector, _ := n.Attributes["selector"]
-	onclick, _ := n.Attributes["_onclick"]
+	onclick, _ := n.Attributes["onclick"]
 	disabled, _ := n.Attributes["disabled"]
 	separator, _ := n.Attributes["separator"]
 
