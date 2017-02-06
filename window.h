@@ -2,7 +2,7 @@
 #define window_h
 
 #import <Cocoa/Cocoa.h>
-#import <WebKit/Webkit.h>
+#import <WebKit/WebKit.h>
 
 typedef struct Window__ {
   const char *ID;
