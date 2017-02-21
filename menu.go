@@ -180,7 +180,7 @@ func onMenuItemClick(cid *C.char, cmethod *C.char) {
 	method := C.GoString(cmethod)
 
 	app.UIChan <- func() {
-		markup.Call(uid.ID(id), method, "")
+		markup.HandleEvent(uid.ID(id), method, "")
 	}
 }
 
