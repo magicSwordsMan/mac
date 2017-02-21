@@ -11,7 +11,7 @@ func onJSCall(cmsg *C.char) {
 	msg := C.GoString(cmsg)
 
 	app.UIChan <- func() {
-		app.CallComponentMethod(msg)
+		app.HandleEvent(msg)
 	}
 }
 
