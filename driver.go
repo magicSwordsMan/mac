@@ -15,6 +15,7 @@ package mac
 */
 import "C"
 import (
+	"encoding/json"
 	"runtime"
 
 	"github.com/murlokswarm/app"
@@ -154,6 +155,22 @@ func onFileOpen(cfilename *C.char) {
 	app.UIChan <- func() {
 		if app.OnFileOpen != nil {
 			app.OnFileOpen(filename)
+		}
+	}
+}
+
+//export onFilesOpen
+func onFilesOpen(cfilenamesJSON *C.char) {
+	filenamesJSON := C.GoString(cfilenamesJSON)
+
+	var filenames []string
+	if err := json.Unmarshal([]byte(filenamesJSON), &filenames); err != nil {
+		log.Panic(err)
+	}
+
+	app.UIChan <- func() {
+		if app.OnFilesOpen != nil {
+			app.OnFilesOpen(filenames)
 		}
 	}
 }

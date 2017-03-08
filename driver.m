@@ -26,10 +26,19 @@
   return YES;
 }
 
-- (BOOL)application:(NSApplication *)theApplication
-           openFile:(NSString *)filename {
+- (BOOL)application:(NSApplication *)sender openFile:(NSString *)filename {
   onFileOpen((char *)filename.UTF8String);
   return YES;
+}
+
+- (void)application:(NSApplication *)sender
+          openFiles:(NSArray<NSString *> *)filenames {
+  NSData *jsonData =
+      [NSJSONSerialization dataWithJSONObject:filenames options:0 error:nil];
+  NSString *jsonString =
+      [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+
+  onFilesOpen((char *)jsonString.UTF8String);
 }
 
 - (NSApplicationTerminateReply)applicationShouldTerminate:
