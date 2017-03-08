@@ -165,7 +165,8 @@ func onFilesOpen(cfilenamesJSON *C.char) {
 
 	var filenames []string
 	if err := json.Unmarshal([]byte(filenamesJSON), &filenames); err != nil {
-		log.Panic(err)
+		log.Error(err)
+		return
 	}
 
 	app.UIChan <- func() {
