@@ -77,15 +77,29 @@ func TestOnReopen(t *testing.T) {
 	onReopen(true)
 }
 
-func TestFileOpened(t *testing.T) {
+func TestOnFileOpen(t *testing.T) {
 	app.OnFileOpen = func(n string) {
-		t.Log("MacOS driver fileOpened:", n)
+		t.Log("MacOS driver onFileOpen:", n)
 		if n != "zune" {
 			t.Error("n should be zune")
 		}
 	}
 
 	onFileOpen(cString("zune"))
+}
+
+func TestOnFilesOpen(t *testing.T) {
+	app.OnFilesOpen = func(filenames []string) {
+		t.Log("MacOS driver onFilesOpen:", filenames)
+		if filenames[0] != "zune" {
+			t.Error("filenames[0] should be zune")
+		}
+		if filenames[1] != "mune" {
+			t.Error("filenames[1] should be mune")
+		}
+	}
+
+	onFilesOpen(cString(`["zune", "mune"]`))
 }
 
 func TestOnTerminate(t *testing.T) {
