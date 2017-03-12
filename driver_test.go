@@ -1,6 +1,8 @@
 package mac
 
 import (
+	"net/url"
+	"sync"
 	"testing"
 
 	"github.com/murlokswarm/app"
@@ -38,14 +40,12 @@ func TestDriverNewContextPanic(t *testing.T) {
 
 	driver.NewContext(app.Window{})
 	t.Error("should panic")
-
 }
 
 func TestOnLaunch(t *testing.T) {
 	app.OnLaunch = func() {
 		t.Log("MacOS driver onLaunch")
 	}
-
 	onLaunch()
 }
 
@@ -53,7 +53,6 @@ func TestFocused(t *testing.T) {
 	app.OnFocus = func() {
 		t.Log("MacOS driver onFocus")
 	}
-
 	onFocus()
 }
 
@@ -61,7 +60,6 @@ func TestOnBlur(t *testing.T) {
 	app.OnBlur = func() {
 		t.Log("MacOS driver onBlur")
 	}
-
 	onBlur()
 }
 
@@ -73,7 +71,6 @@ func TestOnReopen(t *testing.T) {
 			t.Error("v should be true")
 		}
 	}
-
 	onReopen(true)
 }
 
@@ -84,7 +81,6 @@ func TestOnFileOpen(t *testing.T) {
 			t.Error("n should be zune")
 		}
 	}
-
 	onFileOpen(cString("zune"))
 }
 
@@ -98,8 +94,21 @@ func TestOnFilesOpen(t *testing.T) {
 			t.Error("filenames[1] should be mune")
 		}
 	}
-
 	onFilesOpen(cString(`["zune", "mune"]`))
+}
+
+func TestOnURLOpen(t *testing.T) {
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+
+	app.OnURLOpen = func(URL url.URL) {
+		t.Log("MacOS driver onURLOpen:", URL)
+		wg.Done()
+	}
+	onURLOpen(cString("github-mac://openRepo/https://github.com/murlokswarm/app"))
+
+	wg.Wait()
+
 }
 
 func TestOnTerminate(t *testing.T) {
@@ -123,6 +132,5 @@ func TestOnFinalize(t *testing.T) {
 	app.OnFinalize = func() {
 		t.Log("MacOS driver onFinalize")
 	}
-
 	onFinalize()
 }

@@ -41,6 +41,24 @@
   onFilesOpen((char *)jsonString.UTF8String);
 }
 
+- (void)applicationWillFinishLaunching:(NSNotification *)aNotification {
+  NSAppleEventManager *appleEventManager =
+      [NSAppleEventManager sharedAppleEventManager];
+  [appleEventManager
+      setEventHandler:self
+          andSelector:@selector(handleGetURLEvent:withReplyEvent:)
+        forEventClass:kInternetEventClass
+           andEventID:kAEGetURL];
+}
+
+- (void)handleGetURLEvent:(NSAppleEventDescriptor *)event
+           withReplyEvent:(NSAppleEventDescriptor *)replyEvent {
+  NSURL *url =
+      [NSURL URLWithString:[[event paramDescriptorForKeyword:keyDirectObject]
+                               stringValue]];
+  onURLOpen((char *)url.absoluteString.UTF8String);
+}
+
 - (NSApplicationTerminateReply)applicationShouldTerminate:
     (NSApplication *)sender {
   return onTerminate();

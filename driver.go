@@ -16,11 +16,12 @@ package mac
 import "C"
 import (
 	"encoding/json"
+	"net/url"
 	"runtime"
 
 	"github.com/murlokswarm/app"
-	"github.com/murlokswarm/errors"
 	"github.com/murlokswarm/log"
+	"github.com/pkg/errors"
 )
 
 var (
@@ -172,6 +173,22 @@ func onFilesOpen(cfilenamesJSON *C.char) {
 	app.UIChan <- func() {
 		if app.OnFilesOpen != nil {
 			app.OnFilesOpen(filenames)
+		}
+	}
+}
+
+//export onURLOpen
+func onURLOpen(curl *C.char) {
+	urlString := C.GoString(curl)
+	url, err := url.Parse(urlString)
+	if err != nil {
+		log.Error(errors.Wrap(err, "onURLOpen failed"))
+		return
+	}
+
+	app.UIChan <- func() {
+		if app.OnURLOpen != nil {
+			app.OnURLOpen(*url)
 		}
 	}
 }
