@@ -205,17 +205,11 @@ func onWindowWebviewNavigate(cid *C.char, curl *C.char) {
 		return
 	}
 
-	path := filepath.Base(URL.Path)
-	if l := len(path); l == 0 || path[0] != '@' {
-		log.Warnf("path to component should start by '@': %v", path)
-		return
-	}
-	URL.Path = path
+	URL.Path = filepath.Base(URL.Path)
 	URL.Scheme = "component"
-	tag := path[1:]
 
 	app.UIChan <- func() {
-		c, err := markup.New(tag)
+		c, err := markup.New(URL.Path)
 		if err != nil {
 			log.Error(errors.Wrap(err, "onWindowWebviewNavigate failed"))
 			return
