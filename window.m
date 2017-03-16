@@ -215,7 +215,6 @@ void Window_Close(const void *ptr) {
                         (void (^)(WKNavigationActionPolicy))decisionHandler {
   if (navigationAction.navigationType == WKNavigationTypeReload ||
       navigationAction.navigationType == WKNavigationTypeOther) {
-
     if (navigationAction.targetFrame.request != nil) {
       decisionHandler(WKNavigationActionPolicyCancel);
       return;
@@ -226,7 +225,9 @@ void Window_Close(const void *ptr) {
   }
 
   NSURL *url = navigationAction.request.URL;
-  [[NSWorkspace sharedWorkspace] openURL:url];
+  onWindowWebviewNavigate((char *)self.ID.UTF8String,
+                          (char *)url.absoluteString.UTF8String);
+
   decisionHandler(WKNavigationActionPolicyCancel);
 }
 

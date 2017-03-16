@@ -7,16 +7,19 @@ import "C"
 import (
 	"encoding/json"
 	"fmt"
+	"net/url"
+	"path/filepath"
 	"strconv"
 	"unsafe"
 
 	"math"
 
 	"github.com/murlokswarm/app"
-	"github.com/murlokswarm/errors"
+	"github.com/murlokswarm/cli"
 	"github.com/murlokswarm/log"
 	"github.com/murlokswarm/markup"
 	"github.com/murlokswarm/uid"
+	"github.com/pkg/errors"
 )
 
 var (
@@ -140,7 +143,7 @@ func (w *window) renderFullNode(n *markup.Node) {
 func (w *window) renderAttributes(nodeID uid.ID, attrs markup.AttributeMap) {
 	d, err := json.Marshal(attrs)
 	if err != nil {
-		log.Panic(errors.New(err))
+		log.Panic(errors.Wrap(err, "renderAttributes"))
 	}
 
 	call := fmt.Sprintf(`RenderAttributes("%v", %v)`, nodeID, string(d))
@@ -184,6 +187,52 @@ func onWindowCreated(ptr unsafe.Pointer) {
 //export onWindowWebviewLoaded
 func onWindowWebviewLoaded() {
 	winloadedChan <- true
+}
+
+//export onWindowWebviewNavigate
+func onWindowWebviewNavigate(cid *C.char, curl *C.char) {
+	id := C.GoString(cid)
+
+	urlString := C.GoString(curl)
+	URL, err := url.Parse(urlString)
+	if err != nil {
+		log.Error(errors.Wrap(err, "onWindowWebviewNavigate failed"))
+		return
+	}
+
+	if URL.Scheme != "file" {
+		cli.Exec("open", URL.String())
+		return
+	}
+
+	path := filepath.Base(URL.Path)
+	if l := len(path); l == 0 || path[0] != '@' {
+		log.Warnf("path to component should start by '@': %v", path)
+		return
+	}
+	URL.Path = path
+	URL.Scheme = "component"
+	tag := path[1:]
+
+	app.UIChan <- func() {
+		c, err := markup.New(tag)
+		if err != nil {
+			log.Error(errors.Wrap(err, "onWindowWebviewNavigate failed"))
+			return
+		}
+
+		ctx, err := app.ContextByID(uid.ID(id))
+		if err != nil {
+			log.Error(errors.Wrap(err, "onWindowWebviewNavigate failed"))
+			return
+		}
+		win := ctx.(*window)
+
+		win.Mount(c)
+		if hrefer, ok := c.(app.Hrefer); ok {
+			hrefer.OnHref(*URL)
+		}
+	}
 }
 
 //export onWindowMinimize
