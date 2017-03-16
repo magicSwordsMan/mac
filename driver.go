@@ -180,7 +180,7 @@ func onFilesOpen(cfilenamesJSON *C.char) {
 //export onURLOpen
 func onURLOpen(curl *C.char) {
 	urlString := C.GoString(curl)
-	url, err := url.Parse(urlString)
+	URL, err := url.Parse(urlString)
 	if err != nil {
 		log.Error(errors.Wrap(err, "onURLOpen failed"))
 		return
@@ -188,7 +188,7 @@ func onURLOpen(curl *C.char) {
 
 	app.UIChan <- func() {
 		if app.OnURLOpen != nil {
-			app.OnURLOpen(*url)
+			app.OnURLOpen(*URL)
 		}
 	}
 }
