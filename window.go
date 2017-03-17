@@ -224,7 +224,7 @@ func onWindowWebviewNavigate(cid *C.char, curl *C.char) {
 
 		win.Mount(c)
 		if hrefer, ok := c.(app.Hrefer); ok {
-			hrefer.OnHref(*URL)
+			hrefer.OnHref(URL)
 		}
 	}
 }
