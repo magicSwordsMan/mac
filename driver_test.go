@@ -16,29 +16,29 @@ func TestDriver(t *testing.T) {
 }
 
 func TestDriverNewContext(t *testing.T) {
-	launched = true
-	defer func() { launched = false }()
+	driver.running = true
+	defer func() { driver.running = false }()
 
 	// Window => would bloc.
-	// driver.NewContext(app.Window{})
+	// driver.Element(app.Window{})
 
 	// Menu.
-	driver.NewContext(app.ContextMenu{})
+	driver.NewElement(app.ContextMenu{})
 }
 
 func TestDriverNewContextNotImplemented(t *testing.T) {
 	defer func() { recover() }()
 
-	launched = true
-	defer func() { launched = false }()
+	driver.running = true
+	defer func() { driver.running = false }()
 
-	driver.NewContext("not implement")
+	driver.NewElement("not implement")
 }
 
 func TestDriverNewContextPanic(t *testing.T) {
 	defer func() { recover() }()
 
-	driver.NewContext(app.Window{})
+	driver.NewElement(app.Window{})
 	t.Error("should panic")
 }
 
@@ -72,16 +72,6 @@ func TestOnReopen(t *testing.T) {
 		}
 	}
 	onReopen(true)
-}
-
-func TestOnFileOpen(t *testing.T) {
-	app.OnFileOpen = func(n string) {
-		t.Log("MacOS driver onFileOpen:", n)
-		if n != "zune" {
-			t.Error("n should be zune")
-		}
-	}
-	onFileOpen(cString("zune"))
 }
 
 func TestOnFilesOpen(t *testing.T) {

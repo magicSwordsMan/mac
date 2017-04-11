@@ -69,8 +69,8 @@ func init() {
 }
 
 func TestMenuBar(t *testing.T) {
-	launched = true
-	defer func() { launched = false }()
+	driver.running = true
+	defer func() { driver.running = false }()
 
 	c := &SubMenuComponent{}
 	m := newMenuBar()
@@ -78,8 +78,8 @@ func TestMenuBar(t *testing.T) {
 }
 
 func TestContextMenu(t *testing.T) {
-	launched = true
-	defer func() { launched = false }()
+	driver.running = true
+	defer func() { driver.running = false }()
 
 	c := &SubMenuComponent{}
 	m := newContextMenu(app.ContextMenu{})

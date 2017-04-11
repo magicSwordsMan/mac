@@ -7,8 +7,8 @@ func TestNewDock(t *testing.T) {
 }
 
 func TestDockMount(t *testing.T) {
-	launched = true
-	defer func() { launched = false }()
+	driver.running = true
+	defer func() { driver.running = false }()
 
 	d := newDock()
 	c := &MenuComponent{}
@@ -17,8 +17,8 @@ func TestDockMount(t *testing.T) {
 }
 
 func TestDockSetIcon(t *testing.T) {
-	launched = true
-	defer func() { launched = false }()
+	driver.running = true
+	defer func() { driver.running = false }()
 
 	d := newDock()
 
@@ -36,8 +36,8 @@ func TestDockSetIcon(t *testing.T) {
 }
 
 func TestDockSetBadge(t *testing.T) {
-	launched = true
-	defer func() { launched = false }()
+	driver.running = true
+	defer func() { driver.running = false }()
 
 	d := newDock()
 	d.SetBadge(42)

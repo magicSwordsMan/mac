@@ -191,15 +191,16 @@ func onMenuItemClick(cid *C.char, cmethod *C.char) {
 func onMenuCloseFinal(cid *C.char) {
 	id := uuid.FromStringOrNil(C.GoString(cid))
 
+	ctx, ok := app.Elements().Get(id)
+	if !ok {
+		return
+	}
+	menu := ctx.(*menu)
+
 	go func() {
 		time.Sleep(time.Millisecond * 42)
 
 		app.UIChan <- func() {
-			ctx, ok := app.Elements().Get(id)
-			if !ok {
-				return
-			}
-			menu := ctx.(*menu)
 			markup.Dismount(menu.component)
 			app.Elements().Remove(menu)
 		}
