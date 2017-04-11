@@ -213,13 +213,17 @@ void Window_Close(const void *ptr) {
     decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction
                     decisionHandler:
                         (void (^)(WKNavigationActionPolicy))decisionHandler {
+  NSLog(@"nav");
+
   if (navigationAction.navigationType == WKNavigationTypeReload ||
       navigationAction.navigationType == WKNavigationTypeOther) {
     if (navigationAction.targetFrame.request != nil) {
+      NSLog(@"1");
       decisionHandler(WKNavigationActionPolicyCancel);
       return;
     }
 
+    NSLog(@"2");
     decisionHandler(WKNavigationActionPolicyAllow);
     return;
   }
@@ -227,7 +231,7 @@ void Window_Close(const void *ptr) {
   NSURL *url = navigationAction.request.URL;
   onWindowWebviewNavigate((char *)self.ID.UTF8String,
                           (char *)url.absoluteString.UTF8String);
-
+  NSLog(@"3");
   decisionHandler(WKNavigationActionPolicyCancel);
 }
 

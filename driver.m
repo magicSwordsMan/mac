@@ -26,11 +26,6 @@
   return YES;
 }
 
-- (BOOL)application:(NSApplication *)sender openFile:(NSString *)filename {
-  onFileOpen((char *)filename.UTF8String);
-  return YES;
-}
-
 - (void)application:(NSApplication *)sender
           openFiles:(NSArray<NSString *> *)filenames {
   NSData *jsonData =

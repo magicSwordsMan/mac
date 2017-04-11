@@ -17,6 +17,10 @@ func newContextMenu(m app.ContextMenu) *contextMenu {
 	return cm
 }
 
+func (m *contextMenu) Close() error {
+	return nil
+}
+
 func (m *contextMenu) Mount(c app.Componer) {
 	m.menu.Mount(c)
 	C.Menu_Show(m.ptr)

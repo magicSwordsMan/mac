@@ -25,13 +25,17 @@ func newDock() *dock {
 }
 
 func (d *dock) Mount(c app.Componer) {
-	ensureLaunched()
+	driver.mustRun()
 	d.menu.Mount(c)
 	C.Driver_SetDockMenu(d.ptr)
 }
 
+func (d *dock) Component() app.Componer {
+	return d.component
+}
+
 func (d *dock) SetIcon(path string) {
-	ensureLaunched()
+	driver.mustRun()
 
 	cpath := C.CString(path)
 	defer free(unsafe.Pointer(cpath))
@@ -55,7 +59,7 @@ func (d *dock) SetIcon(path string) {
 }
 
 func (d *dock) SetBadge(v interface{}) {
-	ensureLaunched()
+	driver.mustRun()
 
 	if v == nil {
 		v = ""

@@ -7,19 +7,18 @@ import "C"
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"net/url"
 	"path/filepath"
 	"strconv"
 	"unsafe"
 
-	"math"
-
 	"github.com/murlokswarm/app"
 	"github.com/murlokswarm/cli"
 	"github.com/murlokswarm/log"
 	"github.com/murlokswarm/markup"
-	"github.com/murlokswarm/uid"
 	"github.com/pkg/errors"
+	"github.com/satori/go.uuid"
 )
 
 var (
@@ -28,22 +27,25 @@ var (
 )
 
 type window struct {
-	id        uid.ID
+	id        uuid.UUID
 	ptr       unsafe.Pointer
 	component app.Componer
 	config    app.Window
 }
 
 func newWindow(w app.Window) *window {
-	id := uid.Context()
+	id := uuid.NewV1()
+
 	css, err := app.GetFilenamesWithExtensionsFromDir(app.Storage().CSS(), ".css")
 	if err != nil {
 		log.Warn(err)
 	}
+
 	js, err := app.GetFilenamesWithExtensionsFromDir(app.Storage().JS(), ".js")
 	if err != nil {
 		log.Warn(err)
 	}
+
 	htmlCtx := app.HTMLContext{
 		ID:       id,
 		Title:    w.Title,
@@ -52,12 +54,15 @@ func newWindow(w app.Window) *window {
 		JS:       js,
 		CSS:      css,
 	}
+
 	if w.MaxWidth <= 0 {
 		w.MaxWidth = 10000
 	}
+
 	if w.MaxHeight <= 0 {
 		w.MaxHeight = 10000
 	}
+
 	cwin := C.Window__{
 		ID:              C.CString(id.String()),
 		Title:           C.CString(w.Title),
@@ -94,13 +99,13 @@ func newWindow(w app.Window) *window {
 		ptr:    ptr,
 		config: w,
 	}
-	app.RegisterContext(win)
+	app.Elements().Add(win)
 
 	C.Window_Show(win.ptr)
 	return win
 }
 
-func (w *window) ID() uid.ID {
+func (w *window) ID() uuid.UUID {
 	return w.id
 }
 
@@ -123,6 +128,10 @@ func (w *window) Mount(c app.Componer) {
 	C.Window_CallJS(w.ptr, ccall)
 }
 
+func (w *window) Component() app.Componer {
+	return w.component
+}
+
 func (w *window) Render(s markup.Sync) {
 	if s.Scope == markup.FullSync {
 		w.renderFullNode(s.Node)
@@ -140,7 +149,7 @@ func (w *window) renderFullNode(n *markup.Node) {
 	C.Window_CallJS(w.ptr, ccall)
 }
 
-func (w *window) renderAttributes(nodeID uid.ID, attrs markup.AttributeMap) {
+func (w *window) renderAttributes(nodeID uuid.UUID, attrs markup.AttributeMap) {
 	d, err := json.Marshal(attrs)
 	if err != nil {
 		log.Panic(errors.Wrap(err, "renderAttributes"))
@@ -191,7 +200,7 @@ func onWindowWebviewLoaded() {
 
 //export onWindowWebviewNavigate
 func onWindowWebviewNavigate(cid *C.char, curl *C.char) {
-	id := C.GoString(cid)
+	id := uuid.FromStringOrNil(C.GoString(cid))
 
 	urlString := C.GoString(curl)
 	URL, err := url.Parse(urlString)
@@ -215,13 +224,11 @@ func onWindowWebviewNavigate(cid *C.char, curl *C.char) {
 			return
 		}
 
-		ctx, err := app.ContextByID(uid.ID(id))
-		if err != nil {
-			log.Error(errors.Wrap(err, "onWindowWebviewNavigate failed"))
+		ctx, ok := app.Elements().Get(id)
+		if !ok {
 			return
 		}
 		win := ctx.(*window)
-
 		win.Mount(c)
 		if hrefer, ok := c.(app.Hrefer); ok {
 			hrefer.OnHref(URL)
@@ -231,27 +238,25 @@ func onWindowWebviewNavigate(cid *C.char, curl *C.char) {
 
 //export onWindowMinimize
 func onWindowMinimize(cid *C.char) {
-	id := C.GoString(cid)
+	id := uuid.FromStringOrNil(C.GoString(cid))
+	ctx, ok := app.Elements().Get(id)
+	if !ok {
+		return
+	}
+	win := ctx.(*window)
 
-	app.UIChan <- func() {
-		ctx, err := app.ContextByID(uid.ID(id))
-		if err != nil {
-			return
-		}
-		win := ctx.(*window)
-		if win.config.OnMinimize != nil {
-			win.config.OnMinimize()
-		}
+	if win.config.OnMinimize != nil {
+		app.UIChan <- func() { win.config.OnMinimize() }
 	}
 }
 
 //export onWindowDeminimize
 func onWindowDeminimize(cid *C.char) {
-	id := C.GoString(cid)
+	id := uuid.FromStringOrNil(C.GoString(cid))
 
 	app.UIChan <- func() {
-		ctx, err := app.ContextByID(uid.ID(id))
-		if err != nil {
+		ctx, ok := app.Elements().Get(id)
+		if !ok {
 			return
 		}
 		win := ctx.(*window)
@@ -263,11 +268,11 @@ func onWindowDeminimize(cid *C.char) {
 
 //export onWindowFullScreen
 func onWindowFullScreen(cid *C.char) {
-	id := C.GoString(cid)
+	id := uuid.FromStringOrNil(C.GoString(cid))
 
 	app.UIChan <- func() {
-		ctx, err := app.ContextByID(uid.ID(id))
-		if err != nil {
+		ctx, ok := app.Elements().Get(id)
+		if !ok {
 			return
 		}
 		win := ctx.(*window)
@@ -279,11 +284,11 @@ func onWindowFullScreen(cid *C.char) {
 
 //export onWindowExitFullScreen
 func onWindowExitFullScreen(cid *C.char) {
-	id := C.GoString(cid)
+	id := uuid.FromStringOrNil(C.GoString(cid))
 
 	app.UIChan <- func() {
-		ctx, err := app.ContextByID(uid.ID(id))
-		if err != nil {
+		ctx, ok := app.Elements().Get(id)
+		if !ok {
 			return
 		}
 		win := ctx.(*window)
@@ -295,13 +300,13 @@ func onWindowExitFullScreen(cid *C.char) {
 
 //export onWindowMove
 func onWindowMove(cid *C.char, cx C.CGFloat, cy C.CGFloat) {
-	id := C.GoString(cid)
+	id := uuid.FromStringOrNil(C.GoString(cid))
 	x := float64(cx)
 	y := float64(cy)
 
 	app.UIChan <- func() {
-		ctx, err := app.ContextByID(uid.ID(id))
-		if err != nil {
+		ctx, ok := app.Elements().Get(id)
+		if !ok {
 			return
 		}
 		win := ctx.(*window)
@@ -313,13 +318,13 @@ func onWindowMove(cid *C.char, cx C.CGFloat, cy C.CGFloat) {
 
 //export onWindowResize
 func onWindowResize(cid *C.char, width C.CGFloat, height C.CGFloat) {
-	id := C.GoString(cid)
+	id := uuid.FromStringOrNil(C.GoString(cid))
 	w := float64(width)
 	h := float64(height)
 
 	app.UIChan <- func() {
-		ctx, err := app.ContextByID(uid.ID(id))
-		if err != nil {
+		ctx, ok := app.Elements().Get(id)
+		if !ok {
 			return
 		}
 		win := ctx.(*window)
@@ -331,11 +336,11 @@ func onWindowResize(cid *C.char, width C.CGFloat, height C.CGFloat) {
 
 //export onWindowFocus
 func onWindowFocus(cid *C.char) {
-	id := C.GoString(cid)
+	id := uuid.FromStringOrNil(C.GoString(cid))
 
 	app.UIChan <- func() {
-		ctx, err := app.ContextByID(uid.ID(id))
-		if err != nil {
+		ctx, ok := app.Elements().Get(id)
+		if !ok {
 			return
 		}
 		win := ctx.(*window)
@@ -347,11 +352,11 @@ func onWindowFocus(cid *C.char) {
 
 //export onWindowBlur
 func onWindowBlur(cid *C.char) {
-	id := C.GoString(cid)
+	id := uuid.FromStringOrNil(C.GoString(cid))
 
 	app.UIChan <- func() {
-		ctx, err := app.ContextByID(uid.ID(id))
-		if err != nil {
+		ctx, ok := app.Elements().Get(id)
+		if !ok {
 			return
 		}
 		win := ctx.(*window)
@@ -363,13 +368,12 @@ func onWindowBlur(cid *C.char) {
 
 //export onWindowClose
 func onWindowClose(cid *C.char) bool {
-	id := C.GoString(cid)
+	id := uuid.FromStringOrNil(C.GoString(cid))
 	closeChan := make(chan bool)
 
 	app.UIChan <- func() {
-		ctx, err := app.ContextByID(uid.ID(id))
-		if err != nil {
-			closeChan <- true
+		ctx, ok := app.Elements().Get(id)
+		if !ok {
 			return
 		}
 		win := ctx.(*window)
@@ -379,21 +383,20 @@ func onWindowClose(cid *C.char) bool {
 		}
 		closeChan <- true
 	}
-
 	return <-closeChan
 }
 
 //export onWindowCloseFinal
 func onWindowCloseFinal(cid *C.char) {
-	id := C.GoString(cid)
+	id := uuid.FromStringOrNil(C.GoString(cid))
 
 	app.UIChan <- func() {
-		ctx, err := app.ContextByID(uid.ID(id))
-		if err != nil {
+		ctx, ok := app.Elements().Get(id)
+		if !ok {
 			return
 		}
 		win := ctx.(*window)
 		markup.Dismount(win.component)
-		app.UnregisterContext(win)
+		app.Elements().Remove(win)
 	}
 }
