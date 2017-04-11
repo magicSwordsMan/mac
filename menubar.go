@@ -17,7 +17,11 @@ func newMenuBar() *menuBar {
 }
 
 func (m *menuBar) Mount(c app.Componer) {
-	ensureLaunched()
+	driver.mustRun()
 	m.menu.Mount(c)
 	C.Driver_SetMenuBar(m.ptr)
+}
+
+func (m *menuBar) Component() app.Componer {
+	return m.component
 }

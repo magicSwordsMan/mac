@@ -17,7 +17,6 @@ import "C"
 import (
 	"encoding/json"
 	"net/url"
-	"runtime"
 
 	"github.com/murlokswarm/app"
 	"github.com/murlokswarm/log"
@@ -25,12 +24,10 @@ import (
 )
 
 var (
-	driver   *Driver
-	launched = false
+	driver *Driver
 )
 
 func init() {
-	runtime.LockOSThread()
 	driver = NewDriver()
 	app.RegisterDriver(driver)
 }
@@ -40,7 +37,7 @@ type Driver struct {
 	storage storage
 	appMenu app.Contexter
 	dock    app.Docker
-	share   app.Sharer
+	running bool
 }
 
 // NewDriver creates a new MacOS driver.
@@ -49,40 +46,46 @@ func NewDriver() *Driver {
 	return &Driver{
 		appMenu: newMenuBar(),
 		dock:    newDock(),
-		share:   &share{},
 	}
 }
 
 // Run launches the Cocoa app.
 func (d *Driver) Run() {
+	d.running = true
 	C.Driver_Run()
 }
 
-// NewContext creates a new context.
-func (d *Driver) NewContext(ctx interface{}) app.Contexter {
-	ensureLaunched()
+// NewElement creates a new app element.
+func (d *Driver) NewElement(e interface{}) app.Elementer {
+	driver.mustRun()
 
-	switch c := ctx.(type) {
+	switch elem := e.(type) {
 	case app.Window:
-		return newWindow(c)
+		return newWindow(elem)
 
 	case app.ContextMenu:
-		return newContextMenu(c)
+		return newContextMenu(elem)
+
+	case app.Share:
+		return newShare(elem)
+
+	case app.FilePicker:
+		return newFilePicker(elem)
 
 	default:
-		log.Panicf("ctx for %T is not implemented", ctx)
+		log.Panicf("element described by %T is not implemented", elem)
 		return nil
 	}
 }
 
 // MenuBar returns the menu bar.
-func (d *Driver) MenuBar() app.Contexter {
-	return d.appMenu
+func (d *Driver) MenuBar() (menu app.Contexter, ok bool) {
+	return d.appMenu, true
 }
 
 // Dock returns the dock.
-func (d *Driver) Dock() app.Docker {
-	return d.dock
+func (d *Driver) Dock() (dock app.Docker, ok bool) {
+	return d.dock, true
 }
 
 // Storage returns the directories location to use during app lifecycle.
@@ -96,25 +99,18 @@ func (d *Driver) JavascriptBridge() string {
 	return "window.webkit.messageHandlers.Call.postMessage(msg);"
 }
 
-// Share returns a sharing service.
-func (d *Driver) Share() app.Sharer {
-	return d.share
-}
-
 func (d *Driver) terminate() {
 	C.Driver_Terminate()
 }
 
-func ensureLaunched() {
-	if !launched {
-		log.Panic(errors.New(`creating and interacting with contexts requires the app to be launched. set app.OnLaunch handler and launch the app by calling app.Run()`))
+func (d *Driver) mustRun() {
+	if !d.running {
+		log.Panic(`app is not running`)
 	}
 }
 
 //export onLaunch
 func onLaunch() {
-	launched = true
-
 	app.UIChan <- func() {
 		if app.OnLaunch != nil {
 			app.OnLaunch()
@@ -145,17 +141,6 @@ func onReopen(hasVisibleWindow bool) {
 	app.UIChan <- func() {
 		if app.OnReopen != nil {
 			app.OnReopen(hasVisibleWindow)
-		}
-	}
-}
-
-//export onFileOpen
-func onFileOpen(cfilename *C.char) {
-	filename := C.GoString(cfilename)
-
-	app.UIChan <- func() {
-		if app.OnFileOpen != nil {
-			app.OnFileOpen(filename)
 		}
 	}
 }

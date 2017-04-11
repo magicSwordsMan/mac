@@ -6,27 +6,26 @@ package mac
 import "C"
 import (
 	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 	"unsafe"
-
-	"path/filepath"
 
 	"github.com/murlokswarm/app"
 	"github.com/murlokswarm/errors"
 	"github.com/murlokswarm/log"
 	"github.com/murlokswarm/markup"
-	"github.com/murlokswarm/uid"
+	"github.com/satori/go.uuid"
 )
 
 type menu struct {
-	id        uid.ID
+	id        uuid.UUID
 	ptr       unsafe.Pointer
 	component app.Componer
 }
 
 func newMenu(m app.Menu) *menu {
-	id := uid.Context()
+	id := uuid.NewV1()
 	cmenu := C.Menu__{
 		ID: C.CString(id.String()),
 	}
@@ -36,11 +35,11 @@ func newMenu(m app.Menu) *menu {
 		id:  id,
 		ptr: C.Menu_New(cmenu),
 	}
-	app.RegisterContext(menu)
+	app.Elements().Add(menu)
 	return menu
 }
 
-func (m *menu) ID() uid.ID {
+func (m *menu) ID() uuid.UUID {
 	return m.id
 }
 
@@ -168,6 +167,10 @@ func (m *menu) associate(parent *markup.Node, child *markup.Node) {
 	C.Menu_Associate(m.ptr, parentID, childID)
 }
 
+func (m *menu) Component() app.Componer {
+	return m.component
+}
+
 func (m *menu) Render(s markup.Sync) {
 	if err := m.mount(s.Node); err != nil {
 		log.Error(err)
@@ -176,29 +179,30 @@ func (m *menu) Render(s markup.Sync) {
 
 //export onMenuItemClick
 func onMenuItemClick(cid *C.char, cmethod *C.char) {
-	id := C.GoString(cid)
+	id := uuid.FromStringOrNil(C.GoString(cid))
 	method := C.GoString(cmethod)
 
 	app.UIChan <- func() {
-		markup.HandleEvent(uid.ID(id), method, "")
+		markup.HandleEvent(id, method, "")
 	}
 }
 
 //export onMenuCloseFinal
 func onMenuCloseFinal(cid *C.char) {
-	id := C.GoString(cid)
+	id := uuid.FromStringOrNil(C.GoString(cid))
+
+	ctx, ok := app.Elements().Get(id)
+	if !ok {
+		return
+	}
+	menu := ctx.(*menu)
 
 	go func() {
 		time.Sleep(time.Millisecond * 42)
 
 		app.UIChan <- func() {
-			ctx, err := app.ContextByID(uid.ID(id))
-			if err != nil {
-				return
-			}
-			menu := ctx.(*menu)
 			markup.Dismount(menu.component)
-			app.UnregisterContext(menu)
+			app.Elements().Remove(menu)
 		}
 	}()
 }

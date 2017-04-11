@@ -227,7 +227,6 @@ void Window_Close(const void *ptr) {
   NSURL *url = navigationAction.request.URL;
   onWindowWebviewNavigate((char *)self.ID.UTF8String,
                           (char *)url.absoluteString.UTF8String);
-
   decisionHandler(WKNavigationActionPolicyCancel);
 }
 
