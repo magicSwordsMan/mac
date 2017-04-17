@@ -45,7 +45,7 @@ func (d *dock) SetIcon(path string) {
 		return
 	}
 
-	if !app.IsSupportedImageExtension(path) {
+	if !app.FileIsSupportedIcon(path) {
 		log.Error(errors.Newf("extension of %v is not supported", path))
 		return
 	}

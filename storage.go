@@ -14,9 +14,7 @@ import (
 	"github.com/murlokswarm/log"
 )
 
-type storage struct{}
-
-func (s storage) Resources() string {
+func resources() string {
 	if isAppPackaged() {
 		cresources := C.Storage_Resources()
 		resourcesName := C.GoString(cresources)
@@ -27,30 +25,6 @@ func (s storage) Resources() string {
 	resourcesName := "resources"
 	createDirIfNotExists(resourcesName)
 	return resourcesName
-}
-
-func (s storage) CSS() string {
-	cssName := filepath.Join(s.Resources(), "css")
-	createDirIfNotExists(cssName)
-	return cssName
-}
-
-func (s storage) JS() string {
-	jsName := filepath.Join(s.Resources(), "js")
-	createDirIfNotExists(jsName)
-	return jsName
-}
-
-func (s storage) Default() string {
-	if C.Sandbox_IsSandboxed() != 0 {
-		defaultName := getHomeDirname()
-		createDirIfNotExists(defaultName)
-		return defaultName
-	}
-
-	defaultName := getSupportDirname()
-	createDirIfNotExists(defaultName)
-	return defaultName
 }
 
 func isAppPackaged() (packaged bool) {
@@ -67,6 +41,18 @@ func isAppPackaged() (packaged bool) {
 		}
 	}
 	return
+}
+
+func storage() string {
+	if C.Sandbox_IsSandboxed() != 0 {
+		defaultName := getHomeDirname()
+		createDirIfNotExists(defaultName)
+		return defaultName
+	}
+
+	defaultName := getSupportDirname()
+	createDirIfNotExists(defaultName)
+	return defaultName
 }
 
 func getHomeDirname() string {
