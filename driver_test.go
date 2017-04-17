@@ -11,11 +11,12 @@ import (
 func TestDriver(t *testing.T) {
 	t.Log(driver.MenuBar())
 	t.Log(driver.Dock())
+	t.Log(driver.Resources())
 	t.Log(driver.Storage())
 	t.Log(driver.JavascriptBridge())
 }
 
-func TestDriverNewContext(t *testing.T) {
+func TestDriverNewElement(t *testing.T) {
 	driver.running = true
 	defer func() { driver.running = false }()
 
@@ -26,7 +27,7 @@ func TestDriverNewContext(t *testing.T) {
 	driver.NewElement(app.ContextMenu{})
 }
 
-func TestDriverNewContextNotImplemented(t *testing.T) {
+func TestDriverNewElementNotImplemented(t *testing.T) {
 	defer func() { recover() }()
 
 	driver.running = true
@@ -35,7 +36,7 @@ func TestDriverNewContextNotImplemented(t *testing.T) {
 	driver.NewElement("not implement")
 }
 
-func TestDriverNewContextPanic(t *testing.T) {
+func TestDriverNewElementPanic(t *testing.T) {
 	defer func() { recover() }()
 
 	driver.NewElement(app.Window{})

@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"math"
 	"net/url"
+	"path/filepath"
 	"strconv"
 	"unsafe"
 
@@ -35,15 +36,11 @@ type window struct {
 func newWindow(w app.Window) *window {
 	id := uuid.NewV1()
 
-	css, err := app.GetFilenamesWithExtensionsFromDir(app.Storage().CSS(), ".css")
-	if err != nil {
-		log.Warn(err)
-	}
+	cssDir := filepath.Join(app.Resources(), "css")
+	css := app.GetFilenamesFromDir(cssDir, ".css")
 
-	js, err := app.GetFilenamesWithExtensionsFromDir(app.Storage().JS(), ".js")
-	if err != nil {
-		log.Warn(err)
-	}
+	jsDir := filepath.Join(app.Resources(), "js")
+	js := app.GetFilenamesFromDir(jsDir, ".js")
 
 	htmlCtx := app.HTMLContext{
 		ID:       id,
@@ -81,7 +78,7 @@ func newWindow(w app.Window) *window {
 		MinimizeHidden:  boolToBOOL(w.MinimizeHidden),
 		TitlebarHidden:  boolToBOOL(w.TitlebarHidden),
 		HTML:            C.CString(htmlCtx.HTML()),
-		ResourcePath:    C.CString(app.Storage().Resources()),
+		ResourcePath:    C.CString(app.Resources()),
 	}
 	defer free(unsafe.Pointer(cwin.ID))
 	defer free(unsafe.Pointer(cwin.Title))

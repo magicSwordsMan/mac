@@ -34,7 +34,6 @@ func init() {
 
 // Driver is the implementation of the MacOS driver.
 type Driver struct {
-	storage storage
 	appMenu app.Contexter
 	dock    app.Docker
 	running bool
@@ -88,9 +87,14 @@ func (d *Driver) Dock() (dock app.Docker, ok bool) {
 	return d.dock, true
 }
 
-// Storage returns the directories location to use during app lifecycle.
-func (d *Driver) Storage() app.Storer {
-	return d.storage
+// Resources returns the location of the resources directory.
+func (d *Driver) Resources() string {
+	return resources()
+}
+
+// Storage returns the location of the app storage directory.
+func (d *Driver) Storage() string {
+	return storage()
 }
 
 // JavascriptBridge returns the javascript statement to allow javascript to

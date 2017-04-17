@@ -127,8 +127,8 @@ func (m *menu) mountItem(n *markup.Node) (err error) {
 
 	var iconPath string
 	if len(icon) != 0 {
-		iconPath = filepath.Join(app.Storage().Resources(), icon)
-		if !app.IsSupportedImageExtension(iconPath) {
+		iconPath = filepath.Join(app.Resources(), icon)
+		if !app.FileIsSupportedIcon(iconPath) {
 			err = errors.Newf("extension of %v is not supported", iconPath)
 			return
 		}
