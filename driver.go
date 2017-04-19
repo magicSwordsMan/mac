@@ -141,10 +141,10 @@ func onBlur() {
 }
 
 //export onReopen
-func onReopen(hasVisibleWindow bool) {
+func onReopen() {
 	app.UIChan <- func() {
 		if app.OnReopen != nil {
-			app.OnReopen(hasVisibleWindow)
+			app.OnReopen()
 		}
 	}
 }
