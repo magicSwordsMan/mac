@@ -22,7 +22,7 @@
 
 - (BOOL)applicationShouldHandleReopen:(NSApplication *)sender
                     hasVisibleWindows:(BOOL)flag {
-  onReopen(flag);
+  onReopen();
   return YES;
 }
 
