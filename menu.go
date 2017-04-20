@@ -182,6 +182,10 @@ func onMenuItemClick(cid *C.char, cmethod *C.char) {
 	id := uuid.FromStringOrNil(C.GoString(cid))
 	method := C.GoString(cmethod)
 
+	if len(method) == 0 {
+		return
+	}
+
 	app.UIChan <- func() {
 		markup.HandleEvent(id, method, "")
 	}
